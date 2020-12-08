@@ -28,7 +28,7 @@ class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
     WS("/game", wsClient.flow) ~> server.routes ~>
       check {
-        wsClient.sendMessage("{\n  \"$type\" : \"login\",\n  \"username\" : \"John\"\n}")
+        wsClient.sendMessage(loginRequest)
         wsClient.expectMessage("{\n  \"$type\" : \"login_successful\"\n}")
         wsClient.sendCompletion()
         wsClient.expectCompletion()
