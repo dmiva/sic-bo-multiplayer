@@ -2,6 +2,7 @@ package com.dmiva.sicbo
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import com.dmiva.sicbo.actors.GameRoom
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
@@ -15,7 +16,7 @@ object Main {
     val port = 9000
     val service = new WebService()
 
-    val binding = Http().newServerAt(interface, port).bind(service.route)
+    val binding = Http().newServerAt(interface, port).bind(service.routes)
     binding.onComplete {
       case Success(binding) =>
         val localAddress = binding.localAddress
