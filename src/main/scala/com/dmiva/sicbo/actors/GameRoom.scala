@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorRef, Props, Terminated, Timers}
-import com.dmiva.sicbo.common.{BetRejected, Error, LoggedOut, LoginFailed, LoginSuccessful, NotEnoughBalance}
+import com.dmiva.sicbo.common.{BetAccepted, BetRejectReason, BetRejected, Error, ErrorMessage, LoggedOut, LoginFailed, LoginSuccessful, PlaceBet}
 
 import scala.concurrent.duration.DurationInt
 
@@ -10,13 +10,13 @@ object GameRoom {
   case class Join(username: String, user: ActorRef)
   case class Leave(username: String, user: ActorRef)
 
-
   def props() = Props(new GameRoom)
 }
 
 class GameRoom extends Actor with Timers {
   import GameRoom._
 
+  var gameState: Game = Game(Idle)
 
   override def receive: Receive = idle(Set.empty)
 
@@ -25,44 +25,63 @@ class GameRoom extends Actor with Timers {
     case Join(username, user) =>
       if (users.contains(user)) {
         // do nothing at this moment
-        user ! Error("Login attempt when already logged in")
+        user ! Error(ErrorMessage.alreadyLoggedIn)
       } else {
         user ! LoginSuccessful
         context.watch(user)
         println(s"$username joined the game. Players: ${users.size+1}")
-        if (users.isEmpty) timers.startSingleTimer("Starting game...", PlacingBets, 3.seconds)
+        if (gameState == Game(Idle)) timers.startSingleTimer("Starting game...", PlacingBets, 3.seconds)
         context.become(idle(users + user))
       }
 
     case Leave(username, user) =>
       if (users.contains(user)) {
         user ! LoggedOut
-        println(s"$username left the game. Players: ${users.size-1}")
+        println(s"$username left the game. Players: ${users.size-1}") // TODO: Should search by user reference, not by name
         context.become(idle(users.filterNot(_ == user)))
       } else {
-        user ! Error("User is not logged in")
+        user ! Error(ErrorMessage.notLoggedIn)
       }
 
-    case Terminated(ref: ActorRef) =>
+    case PlaceBet(betId, amount) =>
+      if (gameState == Game(PlacingBets) && users.contains(sender())) {
+        sender() ! BetAccepted
+        println(s"Someone placed bet with id = $betId and amount = $amount")
+      }
+      else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.timeExpired)
+        else sender() ! Error(ErrorMessage.notLoggedIn)
+
+    case Terminated(ref: ActorRef) => // TODO: Should be handled by someone else
+      println(s"Someone disconnected the game. Players: ${users.size-1}")
       context.become(idle(users.filterNot(_ == ref)))
 
 
+
+    case Idle =>
+      gameState = Game(Idle)
+      println("Waiting for players...")
+
     case PlacingBets =>
-      println("Place bets started. You have 15 seconds to place bets")
+      gameState = Game(PlacingBets)
+      println("New game started. You have 15 seconds to place bets...")
       timers.startSingleTimer("Time before rolling dice", RollingDice, 15.seconds)
 
     case RollingDice =>
+      gameState = Game(RollingDice)
       println("Dice are rolling...")
       timers.startSingleTimer("Time before making payouts", MakePayouts, 5.seconds)
 
     case MakePayouts =>
+      gameState = Game(MakePayouts)
       println("Making payouts...")
-      timers.startSingleTimer("Time before new round", GameIsEnded, 5.seconds)
+      timers.startSingleTimer("Time before new round", GameEnded, 5.seconds)
 
-    case GameIsEnded =>
-      println("Round ended.")
-      if (users.nonEmpty) self ! PlacingBets
-
+    case GameEnded =>
+      println("Game ended.")
+      if (users.nonEmpty)
+        self ! PlacingBets
+      else
+        self ! Idle
   }
 
 
@@ -72,14 +91,13 @@ object Game {
 
 }
 
-class Game(newState: GameState) {
-
-}
+case class Game(currentState: GameState)
 
 sealed trait GameState
 
+case object Idle extends GameState
 case object PlacingBets extends GameState
 case object RollingDice extends GameState
 case object MakePayouts extends GameState
-case object GameIsEnded extends GameState
+case object GameEnded extends GameState
 

@@ -9,4 +9,5 @@ object JsonConfig {
       .default
       .withDiscriminator("$type")
       .withSnakeCaseConstructorNames
+      .withSnakeCaseMemberNames
 }

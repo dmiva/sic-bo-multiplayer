@@ -1,6 +1,7 @@
 package com.dmiva.sicbo.actors
 
-import akka.actor.{Actor, ActorRef, PoisonPill, Props}
+import akka.Done
+import akka.actor.{Actor, ActorRef, PoisonPill, Props, Status}
 import com.dmiva.sicbo.common.{IncomingMessage, Login, Logout, OutgoingMessage, PlaceBet}
 
 object User {

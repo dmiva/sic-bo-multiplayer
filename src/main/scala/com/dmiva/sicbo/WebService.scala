@@ -1,15 +1,16 @@
 package com.dmiva.sicbo
 
-import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.{Done, NotUsed}
+import akka.actor.{ActorSystem, Status}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
-import akka.stream.OverflowStrategy
+import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.dmiva.sicbo.actors.{GameRoom, User}
 import com.dmiva.sicbo.common.{Error, IncomingMessage, OutgoingMessage}
 import io.circe.generic.auto._
 import io.circe.parser._
+import io.circe.generic.extras.ConfiguredJsonCodec
 import io.circe.syntax.EncoderOps
 
 import scala.concurrent.duration.DurationInt
@@ -45,20 +46,26 @@ class WebService(implicit val system: ActorSystem) extends Directives {
 
     val source: Source[Message, NotUsed] =
       Source.actorRef[OutgoingMessage](
-        PartialFunction.empty,
-        PartialFunction.empty,
-        bufferSize = 10, overflowStrategy = OverflowStrategy.fail)
+//        completionMatcher = PartialFunction.empty,
+        completionMatcher = {
+          case Done =>
+            // complete stream immediately if we send it Done
+            CompletionStrategy.immediately
+        },
+        failureMatcher = PartialFunction.empty,
+        bufferSize = 10,
+        overflowStrategy = OverflowStrategy.fail)
         .map {
           message: OutgoingMessage => TextMessage.Strict(message.asJson.toString())
         }
         // wsOutput is handle that is used to send messages to WS
         // When wsOutput sends a message, it is emitted to websocket stream
-        .mapMaterializedValue { wsOutput =>
+        .mapMaterializedValue { wsHandle =>
           // Pass the handle to newly created actor, that is handling user connection
-          newUserActor ! User.Connected(wsOutput)
+          newUserActor ! User.Connected(wsHandle)
           NotUsed
         }
-        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive"))
+//        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive"))
 
     Flow.fromSinkAndSource(sink, source)
   }
