@@ -44,14 +44,16 @@ class WebService(implicit val system: ActorSystem) extends Directives {
         // When stream completes (e.g. disconnection), the last event is emitted to inform the actor
         .to(Sink.actorRef(newUserActor, User.Disconnected, _ => User.Disconnected))
 
+    val completionMatcher: PartialFunction[Any, CompletionStrategy] = {
+      case Done =>
+        // complete stream immediately if we send it Done
+        CompletionStrategy.immediately
+    }
+
     val source: Source[Message, NotUsed] =
+
       Source.actorRef[OutgoingMessage](
-//        completionMatcher = PartialFunction.empty,
-        completionMatcher = {
-          case Done =>
-            // complete stream immediately if we send it Done
-            CompletionStrategy.immediately
-        },
+        completionMatcher = completionMatcher,
         failureMatcher = PartialFunction.empty,
         bufferSize = 10,
         overflowStrategy = OverflowStrategy.fail)

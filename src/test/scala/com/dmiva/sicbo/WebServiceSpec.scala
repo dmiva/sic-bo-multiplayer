@@ -12,15 +12,16 @@ import io.circe.generic.auto._
 import io.circe.parser._
 
 class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
+  val server = new WebService()
   test("Webserver should respond to root path request") {
-    val server = new WebService()
+
     Get() ~> server.routes ~> check {
       status shouldEqual StatusCodes.OK
     }
   }
 
   test("Websocket should respond to first login request with success") {
-    val server = new WebService()
+
     val wsClient = WSProbe()
     val loginRequest = Login("John").asJson.toString()
 
@@ -36,7 +37,7 @@ class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error to the second login request") {
-    val server = new WebService()
+
     val wsClient = WSProbe()
     WS("/game", wsClient.flow) ~> server.routes ~>
       check {
@@ -50,7 +51,7 @@ class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with correct message to logout request when user is logged in") {
-    val server = new WebService()
+
     val wsClient = WSProbe()
     WS("/game", wsClient.flow) ~> server.routes ~>
       check {
@@ -64,7 +65,7 @@ class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error message to logout request when user is not logged in") {
-    val server = new WebService()
+
     val wsClient = WSProbe()
     WS("/game", wsClient.flow) ~> server.routes ~>
       check {
