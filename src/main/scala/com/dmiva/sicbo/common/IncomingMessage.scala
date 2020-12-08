@@ -7,4 +7,5 @@ import JsonConfig.customConfig
 @ConfiguredJsonCodec sealed trait IncomingMessage
 
 case class Login(username: String) extends IncomingMessage
+case class Logout(username: String) extends IncomingMessage
 case class PlaceBet(betId: Int, amount: Int) extends IncomingMessage

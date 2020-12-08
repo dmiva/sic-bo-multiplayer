@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorRef, PoisonPill, Props}
-import com.dmiva.sicbo.common.{IncomingMessage, Login, OutgoingMessage, PlaceBet}
+import com.dmiva.sicbo.common.{IncomingMessage, Login, Logout, OutgoingMessage, PlaceBet}
 
 object User {
   case class Connected(wsHandle: ActorRef)
@@ -35,6 +35,7 @@ class User(gameRoom: ActorRef) extends Actor {
 
     case msg: IncomingMessage => msg match {
       case Login(username) => gameRoom ! GameRoom.Join(username, self)
+      case Logout(username) => gameRoom ! GameRoom.Leave(username, self)
       case bet: PlaceBet => gameRoom ! bet
     }
 
