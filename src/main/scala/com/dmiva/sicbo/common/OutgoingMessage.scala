@@ -10,17 +10,19 @@ object OutgoingMessage {
   case object BetAccepted extends OutgoingMessage
   case class BetRejected(reason: String) extends OutgoingMessage
   case class Error(text: String) extends OutgoingMessage
+
+  case object GameStateChanged extends OutgoingMessage
 }
 
 sealed trait BetRejectReason
 object BetRejectReason {
-  val notEnoughBalance = "Not enough balance"
-  val timeExpired = "Wait for the next round"
+  val NotEnoughBalance = "Not enough balance"
+  val TimeExpired = "Wait for the next round"
 }
 
 sealed trait ErrorMessage
 object ErrorMessage {
-  val notLoggedIn = "User is not logged in"
-  val alreadyLoggedIn = "Login attempt when already logged in"
+  val NotLoggedIn = "User is not logged in"
+  val AlreadyLoggedIn = "Login attempt when already logged in"
 }
 

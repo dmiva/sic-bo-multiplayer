@@ -26,7 +26,7 @@ class GameRoom extends Actor with Timers {
     case Join(username, user) =>
       if (users.contains(user)) {
         // do nothing at this moment
-        user ! Error(ErrorMessage.alreadyLoggedIn)
+        user ! Error(ErrorMessage.AlreadyLoggedIn)
       } else {
         user ! LoginSuccessful
         context.watch(user)
@@ -41,7 +41,7 @@ class GameRoom extends Actor with Timers {
         println(s"$username left the game. Players: ${users.size-1}") // TODO: Should search by user reference, not by name
         context.become(idle(users.filterNot(_ == user)))
       } else {
-        user ! Error(ErrorMessage.notLoggedIn)
+        user ! Error(ErrorMessage.NotLoggedIn)
       }
 
     case PlaceBet(betId, amount) =>
@@ -49,8 +49,8 @@ class GameRoom extends Actor with Timers {
         sender() ! BetAccepted
         println(s"Someone placed bet with id = $betId and amount = $amount")
       }
-      else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.timeExpired)
-        else sender() ! Error(ErrorMessage.notLoggedIn)
+      else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.TimeExpired)
+        else sender() ! Error(ErrorMessage.NotLoggedIn)
 
     case Terminated(ref: ActorRef) => // TODO: Should be handled by someone else
       println(s"Someone disconnected the game. Players: ${users.size-1}")

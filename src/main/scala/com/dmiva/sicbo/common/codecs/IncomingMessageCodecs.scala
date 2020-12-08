@@ -1,6 +1,5 @@
 package com.dmiva.sicbo.common.codecs
 
-import akka.http.scaladsl.model.ws.TextMessage
 import com.dmiva.sicbo.common.IncomingMessage
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.extras.semiauto._

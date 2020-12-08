@@ -59,7 +59,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
         bufferSize = 10,
         overflowStrategy = OverflowStrategy.fail)
         .map {
-          message: OutgoingMessage => TextMessage.Strict(message.asJson.toString())
+          message: OutgoingMessage => message.toTextMessage
         }
         // wsOutput is handle that is used to send messages to WS
         // When wsOutput sends a message, it is emitted to websocket stream
