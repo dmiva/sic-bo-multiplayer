@@ -2,7 +2,8 @@ package com.dmiva.sicbo.actors
 
 import akka.Done
 import akka.actor.{Actor, ActorRef, PoisonPill, Props, Status}
-import com.dmiva.sicbo.common.{IncomingMessage, Login, Logout, OutgoingMessage, PlaceBet}
+import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet}
+import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 
 object User {
   case class Connected(wsHandle: ActorRef)
@@ -30,7 +31,7 @@ class User(gameRoom: ActorRef) extends Actor {
   private def connected(wsHandle: ActorRef): Receive = {
 
     case Disconnected => {
-      wsHandle ! PoisonPill
+      wsHandle ! Status.Success
       context.stop(self)
     }
 

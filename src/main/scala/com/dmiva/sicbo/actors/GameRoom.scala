@@ -1,8 +1,9 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorRef, Props, Terminated, Timers}
-import com.dmiva.sicbo.common.{BetAccepted, BetRejectReason, BetRejected, Error, ErrorMessage, LoggedOut, LoginFailed, LoginSuccessful, PlaceBet}
-
+import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
+import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, LoggedOut, LoginSuccessful}
+import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
 import scala.concurrent.duration.DurationInt
 
 object GameRoom {

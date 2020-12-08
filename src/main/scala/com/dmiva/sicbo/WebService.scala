@@ -7,10 +7,11 @@ import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.dmiva.sicbo.actors.{GameRoom, User}
-import com.dmiva.sicbo.common.{Error, IncomingMessage, OutgoingMessage}
-import io.circe.generic.auto._
-import io.circe.parser._
-import io.circe.generic.extras.ConfiguredJsonCodec
+import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
+import com.dmiva.sicbo.common.OutgoingMessage.Error
+import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
+import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
+import io.circe.jawn.decode
 import io.circe.syntax.EncoderOps
 
 import scala.concurrent.duration.DurationInt
@@ -44,16 +45,16 @@ class WebService(implicit val system: ActorSystem) extends Directives {
         // When stream completes (e.g. disconnection), the last event is emitted to inform the actor
         .to(Sink.actorRef(newUserActor, User.Disconnected, _ => User.Disconnected))
 
-    val completionMatcher: PartialFunction[Any, CompletionStrategy] = {
-      case Done =>
-        // complete stream immediately if we send it Done
+    val sourceCompletionMatcher: PartialFunction[Any, CompletionStrategy] = {
+      case Status.Success =>
+        // complete stream immediately if we send it Status.Success
         CompletionStrategy.immediately
     }
 
     val source: Source[Message, NotUsed] =
 
       Source.actorRef[OutgoingMessage](
-        completionMatcher = completionMatcher,
+        completionMatcher = sourceCompletionMatcher,
         failureMatcher = PartialFunction.empty,
         bufferSize = 10,
         overflowStrategy = OverflowStrategy.fail)
@@ -67,7 +68,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
           newUserActor ! User.Connected(wsHandle)
           NotUsed
         }
-//        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive"))
+        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive"))
 
     Flow.fromSinkAndSource(sink, source)
   }

@@ -2,36 +2,33 @@ package com.dmiva.sicbo
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
-import com.dmiva.sicbo.common.Login
+import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import io.circe.syntax.EncoderOps
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import com.dmiva.sicbo.common.JsonConfig.customConfig
-
-import io.circe.generic.auto._
-import io.circe.parser._
+import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
+import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
 
 class WebServerSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
-  val server = new WebService()
-  test("Webserver should respond to root path request") {
 
+  val server = new WebService()
+
+  test("Webserver should respond to root path request") {
     Get() ~> server.routes ~> check {
       status shouldEqual StatusCodes.OK
     }
   }
 
   test("Websocket should respond to first login request with success") {
-
     val wsClient = WSProbe()
-    val loginRequest = Login("John").asJson.toString()
 
-    println(loginRequest)
+    val loginRequest = IncomingMessage.Login("John").toText
+    val loginSuccessfulResponse = OutgoingMessage.LoginSuccessful.toText
 
     WS("/game", wsClient.flow) ~> server.routes ~>
       check {
         wsClient.sendMessage(loginRequest)
-//        wsClient.sendMessage("{\n  \"$type\" : \"login\",\n  \"username\" : \"John\"\n}")
-        wsClient.expectMessage("{\n  \"$type\" : \"login_successful\"\n}")
+        wsClient.expectMessage(loginSuccessfulResponse)
         wsClient.sendCompletion()
         wsClient.expectCompletion()
       }
