@@ -7,7 +7,9 @@ scalaVersion := "2.13.4"
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
-  "-Ymacro-annotations"
+  "-Ymacro-annotations",
+  "-Xlint:unused",
+  "-Wunused:implicits"
 )
 
 val akkaVersion = "2.6.10"

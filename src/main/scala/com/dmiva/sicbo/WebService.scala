@@ -1,6 +1,6 @@
 package com.dmiva.sicbo
 
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.{ActorSystem, Status}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
@@ -12,7 +12,6 @@ import com.dmiva.sicbo.common.OutgoingMessage.Error
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
 import io.circe.jawn.decode
-import io.circe.syntax.EncoderOps
 
 import scala.concurrent.duration.DurationInt
 
@@ -62,7 +61,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
           message: OutgoingMessage => message.toTextMessage
         }
         // wsOutput is handle that is used to send messages to WS
-        // When wsOutput sends a message, it is emitted to websocket stream
+        // When wsOutput sends a message, it is emitted to websockets stream
         .mapMaterializedValue { wsHandle =>
           // Pass the handle to newly created actor, that is handling user connection
           newUserActor ! User.Connected(wsHandle)

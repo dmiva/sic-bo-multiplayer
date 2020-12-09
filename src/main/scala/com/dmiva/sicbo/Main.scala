@@ -2,7 +2,6 @@ package com.dmiva.sicbo
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import com.dmiva.sicbo.actors.GameRoom
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}

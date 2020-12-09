@@ -2,12 +2,8 @@ package com.dmiva.sicbo
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
-import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
-import io.circe.syntax.EncoderOps
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
-import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
 
 class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
