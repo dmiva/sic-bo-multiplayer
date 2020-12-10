@@ -3,9 +3,9 @@ package com.dmiva.sicbo.domain
 import BetType._
 /**
  * Payouts for a specific combination of dice.
- * Applies base payout multipliers according to game specification to the player's bets.
+ * Applies base payout multipliers to the player's bets according to game specification.
  * Does not filters out losing bets from supplied input data.
- * @param diceOutcome Combination of three dice
+ * @param dice Combination of three dice
  */
 final case class Paytable(dice: DiceOutcome) {
 
@@ -60,7 +60,10 @@ final case class Paytable(dice: DiceOutcome) {
       case Triple(num)  => getTriplePayout(num)
       case AnyTriple    => getAnyTriplePayout
     }
-    bet.copy(win = Some((multiplier * betAmount) + betAmount))
+    bet.copy(win = {
+      if (multiplier > 0) Some((multiplier * betAmount) + betAmount)
+      else Some(0)
+    })
   }
 
   def applyPayout(bets: List[Bet]): List[Bet] = {
@@ -74,17 +77,6 @@ final case class Paytable(dice: DiceOutcome) {
     }
   }
 
-  def getTotalWinnings(bets: List[Bet]): Int = {
-    applyPayout(bets).map(bet => bet.win match {
-      case Some(win) => win
-      case None => 0
-    }).sum
-  }
-
-  // Don't know where this could belong TODO: delete or move somewhere
-  //  def applyPayout(bets: List[Bet]): List[Bet] = {
-  //    Bet.winningBets(bets, diceOutcome).map(bet => applyPayout(bet))
-  //  }
-
+  def getWinning(bets: List[Bet]): Int = applyPayout(bets).map(bet => getWinning(bet)).sum
 }
 
