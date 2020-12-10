@@ -6,7 +6,8 @@ package com.dmiva.sicbo.domain
  * @param b Value of second dice
  * @param c Value of third dice
  */
-final case class DiceOutcome(a: Int, b: Int, c: Int)
+final case class DiceOutcome private (a: Int, b: Int, c: Int)
+
 
 final case class DiceOps(dice: DiceOutcome) {
   private val isInRange = dice.a > 0 && dice.b > 0 && dice.c > 0 &&
@@ -14,7 +15,6 @@ final case class DiceOps(dice: DiceOutcome) {
   private val set = Set(dice.a, dice.b, dice.c)
   private val list = List(dice.a, dice.b, dice.c)
   private val map = List(dice.a, dice.b, dice.c).groupBy(identity)
-  // Although it's possible to rewrite two lines below using boolean algebra, I'll leave them in functional(!) style
   private val tripleValue = map.filter { case (_, list) => list.length == 3 }.keys.sum
   private val doubleValue = map.filter { case (_, list) => list.length >= 2 }.keys.sum
   private val isTriple: Boolean = set.size == 1 && isInRange
@@ -22,7 +22,8 @@ final case class DiceOps(dice: DiceOutcome) {
   private val isTotal: Boolean = 4 <= list.sum && list.sum <= 17 && isInRange
   private val total: Int = list.sum
 
-  def hasNumberCount(num: Int): Int = list.count(_ == num)
+  def getTotal: Int = total
+  def numberCount(num: Int): Int = list.count(_ == num)
   def hasNumber(num: Int): Boolean = set.contains(num) && isInRange
   def hasCombo(a: Int, b: Int): Boolean = set.contains(a) && set.contains(b) && a != b && a > 0 && b > 0
   def hasDouble(num: Int): Boolean = isDouble && doubleValue == num && num > 0
@@ -33,4 +34,9 @@ final case class DiceOps(dice: DiceOutcome) {
   def isBig: Boolean = !isTriple && isTotal && total >= 11
   def isEven: Boolean = !isTriple && isTotal && (total % 2 == 0)
   def isOdd: Boolean = !isTriple && isTotal && (total % 2 == 1)
+}
+
+object DiceOutcome {
+  def from(a: Int, b: Int, c: Int): Option[DiceOutcome] =
+    if (a >= 1 && a <= 6 && b >= 1 && b <= 6 && c >= 1 && c <= 6) Some(DiceOutcome(a, b, c)) else None
 }

@@ -38,12 +38,8 @@ object Bet {
   }
 
   def winningBets(bets: List[Bet], diceOutcome: DiceOutcome): List[Bet] = {
-    bets.filter(bet => isWinningBet(bet, diceOutcome))//.map(bet => bet.copy(bet.win = bet.amount * ))
+    bets.filter(bet => isWinningBet(bet, diceOutcome))
   }
-
-//  def winningTotal(bets: List[Bet], diceOutcome: DiceOutcome): Int = {
-//    winningBets(bets, diceOutcome).foldLeft(0)((acc, bet) => )
-//  }
 
 }
 

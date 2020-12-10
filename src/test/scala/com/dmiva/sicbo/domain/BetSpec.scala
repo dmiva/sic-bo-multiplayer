@@ -5,7 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
-class BetSpec  extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
+class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
 
   test("Number bets should be evaluated correctly with randomized input") {
     forAll(
@@ -181,7 +181,7 @@ class BetSpec  extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyCh
           choose(0, 6),
           choose(0, 6)
         ) { case (num1, num2, a, b, c) =>
-//          print(s"$num1, $num2, $a, $b, $c ")
+          print(s"$num1, $num2, $a, $b, $c ")
 
           val diceOps = DiceOps(DiceOutcome(a, b, c))
 
@@ -204,7 +204,7 @@ class BetSpec  extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyCh
             diceOps.hasAnyTriple,
           ).count(_ == true)
 
-//          println(s"Num of win bets - $countOfWinningBets ")
+          println(s"Number of win bets - $countOfWinningBets ")
 
           list = list :+ Bet(None, BetType.Big, None)
           list = list :+ Bet(None, BetType.Small, None)
