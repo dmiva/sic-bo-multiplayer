@@ -1,10 +1,20 @@
 package com.dmiva.sicbo.domain
 
 import com.dmiva.sicbo.domain.BetType._
+import io.circe.{Decoder, Encoder}
+import com.dmiva.sicbo.common.JsonConfig.customConfig
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
 
 final case class Bet(amount: Option[Int], betType: BetType, win: Option[Int])
 
 object Bet {
+
+  implicit val betEncoder: Encoder.AsObject[Bet] = deriveConfiguredEncoder
+  implicit val betDecoder: Decoder[Bet] = deriveConfiguredDecoder
+
+  implicit val betTypeEncoder: Encoder.AsObject[BetType] = deriveConfiguredEncoder
+  implicit val betTypeDecoder: Decoder[BetType] = deriveConfiguredDecoder
+
   def isWinningBetType(betType: BetType, diceOutcome: DiceOutcome): Boolean = {
     val dice = DiceOps(diceOutcome)
 
@@ -28,7 +38,7 @@ object Bet {
   }
 
   def winningBets(bets: List[Bet], diceOutcome: DiceOutcome): List[Bet] = {
-    bets.filter(bet => isWinningBet(bet, diceOutcome))
+    bets.filter(bet => isWinningBet(bet, diceOutcome))//.map(bet => bet.copy(bet.win = bet.amount * ))
   }
 
 //  def winningTotal(bets: List[Bet], diceOutcome: DiceOutcome): Int = {

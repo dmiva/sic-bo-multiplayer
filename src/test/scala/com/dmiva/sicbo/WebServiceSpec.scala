@@ -2,6 +2,8 @@ package com.dmiva.sicbo
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
+import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
+import com.dmiva.sicbo.domain.{Bet, BetType}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -13,6 +15,10 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
   val testName1 = "Hacker777"
   val testName2 = "' or '1'='1"
+  val testBets = List(
+    Bet(Some(50), BetType.Combo(2,5), None),
+    Bet(Some(30), BetType.Total(6), None)
+  )
 
 
   test("Webserver should respond to root path request") {
@@ -75,4 +81,17 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
       }
   }
 
+  test("Websocket should respond with error message to place bet request when user is not logged in") {
+    val wsClient = WSProbe()
+    WS(gameUri, wsClient.flow) ~> server.routes ~>
+      check {
+
+        wsClient.sendMessage(Requests.PlaceBet(testBets))
+//        Requests.PlaceBet(testBets) shouldEqual "asd"
+        wsClient.expectMessage(Responses.ErrorNotLoggedIn)
+
+        wsClient.sendCompletion()
+        wsClient.expectCompletion()
+      }
+  }
 }

@@ -8,7 +8,8 @@ import com.dmiva.sicbo.common.JsonConfig.customConfig
 import io.circe.syntax.EncoderOps
 
 object OutgoingMessageCodecs {
-  implicit val outgoingMessageEncoder: Encoder.AsObject[OutgoingMessage] = deriveConfiguredEncoder
+//  implicit val outgoingMessageEncoder: Encoder.AsObject[OutgoingMessage] = deriveConfiguredEncoder
+  implicit val outgoingMessageEncoder: Encoder[OutgoingMessage] = deriveConfiguredEncoder
   implicit val outgoingMessageDecoder: Decoder[OutgoingMessage] = deriveConfiguredDecoder
 
   implicit class outgoingMessageOps(message: OutgoingMessage) {

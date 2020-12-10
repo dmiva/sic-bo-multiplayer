@@ -44,10 +44,10 @@ class GameRoom extends Actor with Timers {
         user ! Error(ErrorMessage.NotLoggedIn)
       }
 
-    case PlaceBet(betId, amount) =>
+    case PlaceBet(bets) =>
       if (gameState == Game(PlacingBets) && users.contains(sender())) {
         sender() ! BetAccepted
-        println(s"Someone placed bet with id = $betId and amount = $amount")
+        bets.map(bet => println(s"Someone placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
       }
       else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.TimeExpired)
         else sender() ! Error(ErrorMessage.NotLoggedIn)
