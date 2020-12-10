@@ -16,10 +16,14 @@ val akkaVersion = "2.6.10"
 val akkaHttpVersion = "10.2.1"
 val akkaHttpCirceVersion = "1.35.2"
 val scalaTestVersion = "3.2.3"
+val scalaTestPlusVersion = "3.1.0.0-RC2"
+val scalaCheckVersion = "1.15.1"
 val circeVersion = "0.13.0"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
+  "org.scalacheck" %% "scalacheck" % scalaCheckVersion % Test,
+  "org.scalatestplus" %% "scalatestplus-scalacheck" % scalaTestPlusVersion % Test,
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
