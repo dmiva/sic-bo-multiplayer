@@ -15,8 +15,7 @@ object Bet {
   implicit val betTypeEncoder: Encoder.AsObject[BetType] = deriveConfiguredEncoder
   implicit val betTypeDecoder: Decoder[BetType] = deriveConfiguredDecoder
 
-  def isWinningBetType(betType: BetType, diceOutcome: DiceOutcome): Boolean = {
-    val dice = DiceOps(diceOutcome)
+  def isWinningBetType(betType: BetType, dice: DiceOutcome): Boolean = {
 
     betType match {
       case Small       if dice.isSmall         => true

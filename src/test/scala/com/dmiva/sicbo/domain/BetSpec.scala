@@ -54,7 +54,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
       val sumInRange = 4 <= sum && sum <= 17
       val result2 = (bet == sum) && sumInRange
 
-      DiceOps(DiceOutcome(a,b,c)).hasTotal(sum) shouldEqual sumInRange
+      DiceOutcome(a,b,c).hasTotal(sum) shouldEqual sumInRange
       Bet.isWinningBetType(BetType.Total(a + b + c), DiceOutcome(a, b, c)) shouldEqual sumInRange
       Bet.isWinningBetType(BetType.Total(bet), DiceOutcome(a, b, c)) shouldEqual result2
     }
@@ -74,11 +74,11 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         else if (a == c) a
         else if (b == c) b else 0
 
-        DiceOps(DiceOutcome(a,b,c)).hasDouble(doubleValue) shouldEqual result
+        DiceOutcome(a,b,c).hasDouble(doubleValue) shouldEqual result
         Bet.isWinningBetType(BetType.Double(0), DiceOutcome(a,b,c)) shouldEqual false
         Bet.isWinningBetType(BetType.Double(bet), DiceOutcome(a,b,c)) shouldEqual (doubleValue == bet)
       }
-    DiceOps(DiceOutcome(5,5,5)).hasDouble(5) shouldEqual true
+    DiceOutcome(5,5,5).hasDouble(5) shouldEqual true
   }
 
   test("Triple bets should be evaluated correctly with randomized input") {
@@ -92,8 +92,8 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         val result: Boolean = a == b && a == c
         val tripleValue = if (result) a else 0
 
-        DiceOps(DiceOutcome(a,b,c)).hasAnyTriple shouldEqual result
-        DiceOps(DiceOutcome(a,b,c)).hasTriple(tripleValue) shouldEqual result
+        DiceOutcome(a,b,c).hasAnyTriple shouldEqual result
+        DiceOutcome(a,b,c).hasTriple(tripleValue) shouldEqual result
         Bet.isWinningBetType(BetType.Triple(bet), DiceOutcome(a,b,c)) shouldEqual (tripleValue == bet)
       }
   }
@@ -112,7 +112,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
                   !isTriple && (sum == 11 || sum == 12 || sum == 13 || sum == 14 || sum == 15 || sum == 16 || sum == 17)
 
 
-      DiceOps(DiceOutcome(a, b, c)).isBig shouldEqual isBig
+      DiceOutcome(a, b, c).isBig shouldEqual isBig
       Bet.isWinningBetType(BetType.Big, DiceOutcome(a, b, c)) shouldEqual isBig
     }
   }
@@ -131,7 +131,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         !isTriple && (sum == 4 || sum == 5 || sum == 6 || sum == 7 || sum == 8 || sum == 9 || sum == 10)
 
 
-      DiceOps(DiceOutcome(a, b, c)).isSmall shouldEqual isSmall
+      DiceOutcome(a, b, c).isSmall shouldEqual isSmall
       Bet.isWinningBetType(BetType.Small, DiceOutcome(a, b, c)) shouldEqual isSmall
     }
   }
@@ -147,7 +147,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
       val isTriple = a == b && a == c
       val result = !isTriple && sumIsEven
 
-      DiceOps(DiceOutcome(a, b, c)).isEven shouldEqual result
+      DiceOutcome(a, b, c).isEven shouldEqual result
       Bet.isWinningBetType(BetType.Even, DiceOutcome(a, b, c)) shouldEqual result
     }
   }
@@ -163,7 +163,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
       val isTriple = a == b && a == c
       val result = !isTriple && sumIsOdd
 
-      DiceOps(DiceOutcome(a, b, c)).isOdd shouldEqual result
+      DiceOutcome(a, b, c).isOdd shouldEqual result
       Bet.isWinningBetType(BetType.Odd, DiceOutcome(a, b, c)) shouldEqual result
     }
   }
@@ -183,25 +183,25 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         ) { case (num1, num2, a, b, c) =>
           print(s"$num1, $num2, $a, $b, $c ")
 
-          val diceOps = DiceOps(DiceOutcome(a, b, c))
+          val dice = DiceOutcome(a, b, c)
 
           val countOfWinningBets = List(
-            diceOps.isBig,
-            diceOps.isSmall,
-            diceOps.isEven,
-            diceOps.isOdd,
-            diceOps.hasNumber(a),
-            diceOps.hasNumber(b),
-            diceOps.hasNumber(c),
-            diceOps.hasNumber(num1),
-            diceOps.hasNumber(num2),
-            diceOps.hasTotal(a + b + c),
-            diceOps.hasCombo(num1, num2),
-            diceOps.hasDouble(num1),
-            diceOps.hasDouble(num2),
-            diceOps.hasTriple(num1),
-            diceOps.hasTriple(num2),
-            diceOps.hasAnyTriple,
+            dice.isBig,
+            dice.isSmall,
+            dice.isEven,
+            dice.isOdd,
+            dice.hasNumber(a),
+            dice.hasNumber(b),
+            dice.hasNumber(c),
+            dice.hasNumber(num1),
+            dice.hasNumber(num2),
+            dice.hasTotal(a + b + c),
+            dice.hasCombo(num1, num2),
+            dice.hasDouble(num1),
+            dice.hasDouble(num2),
+            dice.hasTriple(num1),
+            dice.hasTriple(num2),
+            dice.hasAnyTriple,
           ).count(_ == true)
 
           println(s"Number of win bets - $countOfWinningBets ")

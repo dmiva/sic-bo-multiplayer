@@ -7,9 +7,7 @@ import BetType._
  * Does not filters out losing bets from supplied input data.
  * @param diceOutcome Combination of three dice
  */
-final case class Paytable(diceOutcome: DiceOutcome) {
-
-  private val dice = DiceOps(diceOutcome)
+final case class Paytable(dice: DiceOutcome) {
 
   private def totalPayout(num: Int): Int = num match {
     case 4 | 17 => 50

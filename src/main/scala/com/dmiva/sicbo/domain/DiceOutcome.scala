@@ -6,15 +6,12 @@ package com.dmiva.sicbo.domain
  * @param b Value of second dice
  * @param c Value of third dice
  */
-final case class DiceOutcome private (a: Int, b: Int, c: Int)
-
-
-final case class DiceOps(dice: DiceOutcome) {
-  private val isInRange = dice.a > 0 && dice.b > 0 && dice.c > 0 &&
-                          dice.a < 7 && dice.b < 7 && dice.c < 7
-  private val set = Set(dice.a, dice.b, dice.c)
-  private val list = List(dice.a, dice.b, dice.c)
-  private val map = List(dice.a, dice.b, dice.c).groupBy(identity)
+final case class DiceOutcome private (a: Int, b: Int, c: Int) {
+  private val isInRange = a > 0 && b > 0 && c > 0 &&
+                          a < 7 && b < 7 && c < 7
+  private val set = Set(a, b, c)
+  private val list = List(a, b, c)
+  private val map = List(a, b, c).groupBy(identity)
   private val tripleValue = map.filter { case (_, list) => list.length == 3 }.keys.sum
   private val doubleValue = map.filter { case (_, list) => list.length >= 2 }.keys.sum
   private val isTriple: Boolean = set.size == 1 && isInRange
