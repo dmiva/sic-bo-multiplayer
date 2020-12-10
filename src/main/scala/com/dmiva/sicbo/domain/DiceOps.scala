@@ -18,7 +18,7 @@ final case class DiceOps(dice: DiceOutcome) {
   private val tripleValue = map.filter { case (_, list) => list.length == 3 }.keys.sum
   private val doubleValue = map.filter { case (_, list) => list.length >= 2 }.keys.sum
   private val isTriple: Boolean = set.size == 1 && isInRange
-  private val isDouble: Boolean = set.size == 2 && isInRange
+  private val isDouble: Boolean = set.size <= 2 && isInRange
   private val isTotal: Boolean = 4 <= list.sum && list.sum <= 17 && isInRange
   private val total: Int = list.sum
 

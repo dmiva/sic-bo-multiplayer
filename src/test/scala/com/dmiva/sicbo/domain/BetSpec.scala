@@ -51,11 +51,11 @@ class BetSpec  extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyCh
     ) { case (bet, a, b, c) =>
 
       val sum = a + b + c
-      val result = 4 <= (a + b + c) && (a + b + c) <= 17
-      val result2 = bet == (a + b + c)
+      val sumInRange = 4 <= sum && sum <= 17
+      val result2 = (bet == sum) && sumInRange
 
-      DiceOps(DiceOutcome(a,b,c)).hasTotal(sum) shouldEqual result
-      Bet.isWinningBetType(BetType.Total(a + b + c), DiceOutcome(a, b, c)) shouldEqual result
+      DiceOps(DiceOutcome(a,b,c)).hasTotal(sum) shouldEqual sumInRange
+      Bet.isWinningBetType(BetType.Total(a + b + c), DiceOutcome(a, b, c)) shouldEqual sumInRange
       Bet.isWinningBetType(BetType.Total(bet), DiceOutcome(a, b, c)) shouldEqual result2
     }
   }
@@ -78,6 +78,7 @@ class BetSpec  extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyCh
         Bet.isWinningBetType(BetType.Double(0), DiceOutcome(a,b,c)) shouldEqual false
         Bet.isWinningBetType(BetType.Double(bet), DiceOutcome(a,b,c)) shouldEqual (doubleValue == bet)
       }
+    DiceOps(DiceOutcome(5,5,5)).hasDouble(5) shouldEqual true
   }
 
   test("Triple bets should be evaluated correctly with randomized input") {
