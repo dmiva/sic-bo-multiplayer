@@ -7,6 +7,9 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
 
+  implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
+    PropertyCheckConfiguration(minSuccessful = 200)
+
   test("Number bets should be evaluated correctly with randomized input") {
     forAll(
       choose(1, 6),
@@ -170,7 +173,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
 
   test("winningBets bet should work correctly with randomized input") {
     forAll(
-      choose(5, 20)
+      choose(5, 10)
     ) { case numOfBets =>
       for (_ <- 0 to numOfBets) {
         var list: collection.mutable.Seq[Bet] = collection.mutable.Seq[Bet]()
@@ -181,7 +184,6 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
           choose(0, 6),
           choose(0, 6)
         ) { case (num1, num2, a, b, c) =>
-          print(s"$num1, $num2, $a, $b, $c ")
 
           val dice = DiceOutcome(a, b, c)
 
@@ -203,8 +205,6 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
             dice.hasTriple(num2),
             dice.hasAnyTriple,
           ).count(_ == true)
-
-          println(s"Number of win bets - $countOfWinningBets ")
 
           list = list :+ Bet(None, BetType.Big, None)
           list = list :+ Bet(None, BetType.Small, None)

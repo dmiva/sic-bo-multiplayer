@@ -8,7 +8,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 class PaytableSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChecks {
 
   implicit override val generatorDrivenConfig: PropertyCheckConfiguration =
-    PropertyCheckConfiguration(minSuccessful = 100)
+    PropertyCheckConfiguration(minSuccessful = 200)
 
 
   // Constant payouts that are independent from dice combination
