@@ -4,6 +4,7 @@ package com.dmiva.sicbo.common
 sealed trait OutgoingMessage
 
 object OutgoingMessage {
+  case object RegistrationSuccessful extends OutgoingMessage
   case object LoginSuccessful extends OutgoingMessage
   case object LoginFailed extends OutgoingMessage
   case object LoggedOut extends OutgoingMessage
@@ -26,5 +27,6 @@ sealed trait ErrorMessage
 object ErrorMessage {
   val NotLoggedIn = "User is not logged in"
   val AlreadyLoggedIn = "Login attempt when already logged in"
+  val InvalidRequest = "Invalid request"
 }
 

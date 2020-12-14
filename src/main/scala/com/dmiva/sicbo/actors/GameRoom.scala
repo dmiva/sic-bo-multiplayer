@@ -5,13 +5,14 @@ import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, LoggedOut, LoginSuccessful}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
 import com.dmiva.sicbo.domain.Player.PlayerSession
+import com.dmiva.sicbo.domain.Player.User
 
 import scala.concurrent.duration.DurationInt
 
 object GameRoom {
 
-  case class Join(username: String, user: ActorRef)
-  case class Leave(username: String, user: ActorRef)
+  case class Join(user: User, ref: ActorRef)
+  case class Leave(user: User, ref: ActorRef)
 
   def props() = Props(new GameRoom)
 }
@@ -34,25 +35,25 @@ class GameRoom extends Actor with Timers {
 
   private def idle(users: Set[ActorRef]): Receive = {
 
-    case Join(username, user) =>
-      if (users.contains(user)) {
+    case Join(user, ref) =>
+      if (users.contains(ref)) {
         // do nothing at this moment
-        user ! Error(ErrorMessage.AlreadyLoggedIn)
+        ref ! Error(ErrorMessage.AlreadyLoggedIn)
       } else {
-        user ! LoginSuccessful
-        context.watch(user)
-        println(s"$username joined the game. Players: ${users.size+1}")
+//        ref ! LoginSuccessful
+        context.watch(ref)
+        println(s"${user.username} joined the game. Players: ${users.size+1}")
         if (gameState == Game(Idle)) timers.startSingleTimer("Starting game...", PlacingBets, 3.seconds)
-        context.become(idle(users + user))
+        context.become(idle(users + ref))
       }
 
-    case Leave(username, user) =>
-      if (users.contains(user)) {
-        user ! LoggedOut
-        println(s"$username left the game. Players: ${users.size-1}") // TODO: Should search by user reference, not by name
-        context.become(idle(users.filterNot(_ == user)))
+    case Leave(user, ref) =>
+      if (users.contains(ref)) {
+//        ref ! LoggedOut
+        println(s"${user.username} left the game. Players: ${users.size-1}") // TODO: Should search by user reference, not by name
+        context.become(idle(users.filterNot(_ == ref)))
       } else {
-        user ! Error(ErrorMessage.NotLoggedIn)
+        ref ! Error(ErrorMessage.NotLoggedIn)
       }
 
     case PlaceBet(bets) =>

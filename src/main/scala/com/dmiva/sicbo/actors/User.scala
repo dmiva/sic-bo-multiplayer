@@ -1,9 +1,12 @@
 package com.dmiva.sicbo.actors
 
-import akka.actor.{Actor, ActorRef, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import com.dmiva.sicbo.actors.repository.UserRepository
+import com.dmiva.sicbo.actors.repository.UserRepository.LoginResult
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
-import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
+import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
+import com.dmiva.sicbo.common.{ErrorMessage, IncomingMessage, OutgoingMessage}
+import com.dmiva.sicbo.domain.Player
 
 object User {
   case class Connected(wsHandle: ActorRef)
@@ -12,7 +15,7 @@ object User {
   def props(lobby: ActorRef) = Props(new User(lobby))
 }
 
-class User(lobby: ActorRef) extends Actor {
+class User(lobby: ActorRef) extends Actor with ActorLogging {
   import User._
 
   override def receive: Receive = waitingForConnection()
@@ -20,11 +23,8 @@ class User(lobby: ActorRef) extends Actor {
   private def waitingForConnection(): Receive = {
 
     case Connected(wsHandle) =>
-      // Passthrough security checks TODO: check if user exists
-      //gameRoom ! GameRoom.Join(self)
-      println(s"$wsHandle connected")
+      log.info(s"${wsHandle.toString()} connected")
       context.become(connected(wsHandle))
-
   }
 
   private def connected(wsHandle: ActorRef): Receive = {
@@ -35,13 +35,46 @@ class User(lobby: ActorRef) extends Actor {
     }
 
     case msg: IncomingMessage => msg match {
-      case Register(username, password)       => lobby ! UserRepository.Command.Register(username, password)
-      case Login(username) => lobby ! GameRoom.Join(username, self)
-      case Logout(username) => lobby ! GameRoom.Leave(username, self)
-      case bet: PlaceBet => lobby ! bet
+      case Register(username, password)   => lobby ! UserRepository.Command.Register(username, password)
+      case Login(username, password)      => lobby ! UserRepository.Command.Login(username, password)
+      case Logout(_) => wsHandle ! Error(ErrorMessage.NotLoggedIn)
+      case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
+    }
+
+    case msg: UserRepository.LoginResult => msg match {
+      case LoginResult.UserDoesNotExist => wsHandle ! LoginFailed // TODO: Send reason
+      case LoginResult.PasswordIncorrect => wsHandle ! LoginFailed
+      case LoginResult.Successful(user) =>
+        lobby ! GameRoom.Join(user, self) // Automatic join to game because it's the only game room
+        wsHandle ! LoginSuccessful
+        context.become(loggedIn(wsHandle, user))
     }
 
     case msg: OutgoingMessage => wsHandle ! msg
+
+    case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
+
+  }
+
+  private def loggedIn(wsHandle: ActorRef, user: Player.User): Receive = { // TODO: Rename User
+    case Disconnected => {
+      wsHandle ! Status.Success
+      context.stop(self)
+    }
+
+    case msg: IncomingMessage => msg match {
+      case bet: PlaceBet => lobby ! bet
+      case Login(_, _) => wsHandle ! Error(ErrorMessage.AlreadyLoggedIn)
+      case Logout(_) =>
+        lobby ! GameRoom.Leave(user, self)
+        wsHandle ! LoggedOut
+        context.become(connected(wsHandle))
+      case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
+    }
+
+    case msg: OutgoingMessage => wsHandle ! msg
+
+    case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
 
   }
 }

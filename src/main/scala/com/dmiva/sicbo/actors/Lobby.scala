@@ -16,6 +16,7 @@ class Lobby extends Actor {
 
   override def receive: Receive = {
     case msg: UserRepository.Command.Register  => userRepository forward msg
+    case msg: UserRepository.Command.Login => userRepository forward msg
 
     case msg: IncomingMessage.PlaceBet  => gameRoom forward msg
     case msg: GameRoom.Join             => gameRoom forward msg

@@ -16,7 +16,7 @@ import io.circe.jawn.decode
 import scala.concurrent.duration.DurationInt
 
 class WebService(implicit val system: ActorSystem) extends Directives {
-  val lobby = system.actorOf(Lobby.props(), "lobby")
+  val lobby = system.actorOf(Lobby.props())
 
   val authRoute: Route =
     get {

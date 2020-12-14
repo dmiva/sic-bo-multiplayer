@@ -9,11 +9,12 @@ import org.scalatest.matchers.should.Matchers
 
 class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
-  val server = new WebService()
+//  val server = new WebService()
 //  val wsClient: WSProbe = WSProbe()
   val gameUri = "/game"
 
   val testName1 = "Hacker777"
+  val testPass1 = "Password123"
   val testName2 = "' or '1'='1"
 //  val testBets = List(
 //    Bet(Some(50), BetType.Combo(2,5), None),
@@ -26,16 +27,21 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
 
   test("Webserver should respond to root path request") {
+    val server = new WebService()
     Get() ~> server.routes ~> check {
       status shouldEqual StatusCodes.OK
     }
   }
 
   test("Websocket should respond to first login request with success") {
+    val wsServer = new WebService()
     val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
-        wsClient.sendMessage(Requests.Login(testName1))
+        wsClient.sendMessage(Requests.Register(testName1, testPass1))
+        wsClient.expectMessage(Responses.RegistrationSuccessful)
+
+        wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful)
 
         wsClient.sendCompletion()
@@ -44,25 +50,33 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error to the second login request") {
-    val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    val wsServer1 = new WebService()
+    val wsClient1 = WSProbe()
+    WS(gameUri, wsClient1.flow) ~> wsServer1.routes ~>
       check {
-        wsClient.sendMessage(Requests.Login(testName1))
-        wsClient.expectMessage(Responses.LoginSuccessful)
+//        wsClient1.sendMessage(Requests.Register(testName1, testPass1))
+//        wsClient1.expectMessage(Responses.RegistrationSuccessful)
 
-        wsClient.sendMessage(Requests.Login(testName1))
-        wsClient.expectMessage(Responses.ErrorAlreadyLoggedIn)
+        wsClient1.sendMessage(Requests.Login(testName1, testPass1))
+        wsClient1.expectMessage(Responses.LoginSuccessful)
 
-        wsClient.sendCompletion()
-        wsClient.expectCompletion()
+        wsClient1.sendMessage(Requests.Login(testName1, testPass1))
+        wsClient1.expectMessage(Responses.ErrorAlreadyLoggedIn)
+
+        wsClient1.sendCompletion()
+        wsClient1.expectCompletion()
       }
   }
 
   test("Websocket should respond with correct message to logout request when user is logged in") {
+    val wsServer = new WebService()
     val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
-        wsClient.sendMessage(Requests.Login(testName1))
+//        wsClient.sendMessage(Requests.Register(testName1, testPass1))
+//        wsClient.expectMessage(Responses.RegistrationSuccessful)
+
+        wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful)
 
         wsClient.sendMessage(Requests.Logout(testName1))
@@ -74,9 +88,13 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error message to logout request when user is not logged in") {
+    val wsServer = new WebService()
     val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
+//        wsClient.sendMessage(Requests.Register(testName1, testPass1))
+//        wsClient.expectMessage(Responses.RegistrationSuccessful)
+
         wsClient.sendMessage(Requests.Logout(testName1))
         wsClient.expectMessage(Responses.ErrorNotLoggedIn)
 
@@ -86,13 +104,16 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error message to place bet request when user is not logged in") {
+    val wsServer = new WebService()
     val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
+//        wsClient.sendMessage(Requests.Register(testName1, testPass1))
+//        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
         wsClient.sendMessage(Requests.PlaceBet(testBets))
 //        Requests.PlaceBet(testBets) shouldEqual "asd"
-        wsClient.expectMessage(Responses.ErrorNotLoggedIn)
+        wsClient.expectMessage(Responses.ErrorInvalidRequest)
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()
@@ -100,11 +121,14 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should accept message to place bet request when is logged in") {
+    val wsServer = new WebService()
     val wsClient = WSProbe()
-    WS(gameUri, wsClient.flow) ~> server.routes ~>
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
+//        wsClient.sendMessage(Requests.Register(testName1, testPass1))
+//        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
-        wsClient.sendMessage(Requests.Login(testName1))
+        wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful)
         Thread.sleep(4000)
         wsClient.sendMessage(Requests.PlaceBet(testBets))
