@@ -9,9 +9,11 @@ object OutgoingMessage {
   case object LoggedOut extends OutgoingMessage
   case object BetAccepted extends OutgoingMessage
   case class BetRejected(reason: String) extends OutgoingMessage
-  case class Error(text: String) extends OutgoingMessage
 
-  case object GameStateChanged extends OutgoingMessage
+  case class Error(text: String) extends OutgoingMessage
+  case class Ok(text: String) extends OutgoingMessage
+
+//  case object GameStateChanged extends OutgoingMessage
 }
 
 sealed trait BetRejectReason

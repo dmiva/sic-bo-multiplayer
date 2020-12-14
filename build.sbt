@@ -25,17 +25,23 @@ libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % Test,
   "org.scalatestplus" %% "scalatestplus-scalacheck" % scalaTestPlusVersion % Test,
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+  "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
   "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
   "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
   "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+  "ch.qos.logback" % "logback-classic" % "1.2.3",
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-optics" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
+  "eu.timepit" %% "refined" % "0.9.19",
+  "io.circe" %% "circe-refined" % circeVersion
+
 )
 
 fork in run := true

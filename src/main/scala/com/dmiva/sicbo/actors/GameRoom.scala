@@ -4,6 +4,8 @@ import akka.actor.{Actor, ActorRef, Props, Terminated, Timers}
 import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, LoggedOut, LoginSuccessful}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
+import com.dmiva.sicbo.domain.Player.PlayerSession
+
 import scala.concurrent.duration.DurationInt
 
 object GameRoom {
@@ -20,6 +22,15 @@ class GameRoom extends Actor with Timers {
   var gameState: Game = Game(Idle)
 
   override def receive: Receive = idle(Set.empty)
+
+  // Initial state of room
+//  private def waitingForPlayers(players: Map[ActorRef, PlayerSession]): Receive = {
+//
+//    case Join(player, ref) =>
+//
+//
+//
+//  }
 
   private def idle(users: Set[ActorRef]): Receive = {
 
@@ -58,6 +69,7 @@ class GameRoom extends Actor with Timers {
 
 
 
+
     case Idle =>
       gameState = Game(Idle)
       println("Waiting for players...")
@@ -84,6 +96,10 @@ class GameRoom extends Actor with Timers {
       else
         self ! Idle
   }
+
+//  private def playing(users: Set[ActorRef]): Receive = {
+//
+//  }
 
 
 }

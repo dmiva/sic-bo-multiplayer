@@ -1,5 +1,9 @@
 package com.dmiva.sicbo.domain
 
+import com.dmiva.sicbo.common.JsonConfig.customConfig
+import io.circe.{Decoder, Encoder}
+import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+
 sealed trait BetType
 
 object BetType {
@@ -13,4 +17,7 @@ object BetType {
   case class Double(num: Int) extends BetType
   case class Triple(num: Int) extends BetType
   case object AnyTriple extends BetType
+
+  implicit val betTypeEncoder: Encoder.AsObject[BetType] = deriveConfiguredEncoder[BetType]
+  implicit val betTypeDecoder: Decoder[BetType] = deriveConfiguredDecoder[BetType]
 }
