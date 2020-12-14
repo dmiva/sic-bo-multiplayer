@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.dmiva.sicbo.actors.{GameRoom, User}
+import com.dmiva.sicbo.actors.{Lobby, User}
 import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.OutgoingMessage.Error
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
@@ -16,8 +16,7 @@ import io.circe.jawn.decode
 import scala.concurrent.duration.DurationInt
 
 class WebService(implicit val system: ActorSystem) extends Directives {
-  val gameRoom = system.actorOf(GameRoom.props(), "game")
-
+  val lobby = system.actorOf(Lobby.props(), "lobby")
 
   val authRoute: Route =
     get {
@@ -28,7 +27,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
 
   private def newUserFlow: Flow[Message, Message, NotUsed] = {
     // Creating an actor for every WS connection
-    val newUserActor = system.actorOf(User.props(gameRoom))
+    val newUserActor = system.actorOf(User.props(lobby))
     // All WS packets are coming to this sink
     val sink: Sink[Message, NotUsed] =
       Flow[Message]

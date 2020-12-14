@@ -11,8 +11,9 @@ object Main {
     implicit val system: ActorSystem = ActorSystem()
     import system.dispatcher
 
-    val interface = "127.0.0.1"
-    val port = 9000
+    val config = system.settings.config
+    val interface = config.getString("app.interface")
+    val port = config.getInt("app.port")
     val service = new WebService()
 
     val binding = Http().newServerAt(interface, port).bind(service.routes)

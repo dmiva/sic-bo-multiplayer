@@ -15,8 +15,12 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 
   val testName1 = "Hacker777"
   val testName2 = "' or '1'='1"
+//  val testBets = List(
+//    Bet(Some(50), BetType.Combo(2,5), None),
+//    Bet(Some(30), BetType.Total(6), None)
+//  )
+
   val testBets = List(
-    Bet(Some(50), BetType.Combo(2,5), None),
     Bet(Some(30), BetType.Total(6), None)
   )
 
@@ -89,6 +93,23 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
         wsClient.sendMessage(Requests.PlaceBet(testBets))
 //        Requests.PlaceBet(testBets) shouldEqual "asd"
         wsClient.expectMessage(Responses.ErrorNotLoggedIn)
+
+        wsClient.sendCompletion()
+        wsClient.expectCompletion()
+      }
+  }
+
+  test("Websocket should accept message to place bet request when is logged in") {
+    val wsClient = WSProbe()
+    WS(gameUri, wsClient.flow) ~> server.routes ~>
+      check {
+
+        wsClient.sendMessage(Requests.Login(testName1))
+        wsClient.expectMessage(Responses.LoginSuccessful)
+        Thread.sleep(4000)
+        wsClient.sendMessage(Requests.PlaceBet(testBets))
+        //        Requests.PlaceBet(testBets) shouldEqual "asd"
+        wsClient.expectMessage(Responses.BetAccepted)
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()

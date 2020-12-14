@@ -9,11 +9,8 @@ final case class Bet(amount: Option[Int], betType: BetType, win: Option[Int])
 
 object Bet {
 
-  implicit val betEncoder: Encoder.AsObject[Bet] = deriveConfiguredEncoder
-  implicit val betDecoder: Decoder[Bet] = deriveConfiguredDecoder
-
-  implicit val betTypeEncoder: Encoder.AsObject[BetType] = deriveConfiguredEncoder
-  implicit val betTypeDecoder: Decoder[BetType] = deriveConfiguredDecoder
+  implicit val betEncoder: Encoder.AsObject[Bet] = deriveConfiguredEncoder[Bet]
+  implicit val betDecoder: Decoder[Bet] = deriveConfiguredDecoder[Bet]
 
   def isWinningBetType(betType: BetType, dice: DiceOutcome): Boolean = {
 
