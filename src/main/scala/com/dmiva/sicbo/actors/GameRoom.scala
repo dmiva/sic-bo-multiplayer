@@ -1,6 +1,8 @@
 package com.dmiva.sicbo.actors
 
-import akka.actor.{Actor, ActorRef, Props, Terminated, Timers}
+import akka.actor.SupervisorStrategy.{Escalate, Restart}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Terminated, Timers}
+import com.dmiva.sicbo.actors.DiceRoller.DiceResult
 import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, LoggedOut, LoginSuccessful}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
@@ -17,10 +19,19 @@ object GameRoom {
   def props() = Props(new GameRoom)
 }
 
-class GameRoom extends Actor with Timers {
+class GameRoom extends Actor with Timers with ActorLogging {
   import GameRoom._
 
+  val direRoller: ActorRef = context.actorOf(DiceRoller.props())
+
   var gameState: Game = Game(Idle)
+
+  // Supervision strategy for the dice roller actor
+  override val supervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 4.seconds) {
+      case _: IllegalStateException    => Restart
+      case _: Exception                => Escalate
+    }
 
   override def receive: Receive = idle(Set.empty)
 
@@ -64,10 +75,13 @@ class GameRoom extends Actor with Timers {
       else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.TimeExpired)
         else sender() ! Error(ErrorMessage.NotLoggedIn)
 
+
     case Terminated(ref: ActorRef) => // TODO: Should be handled by someone else
       println(s"Someone disconnected the game. Players: ${users.size-1}")
       context.become(idle(users.filterNot(_ == ref)))
 
+
+    case DiceRoller.DiceResult(dice) => log.info(s"Received dice result $dice")
 
 
 
@@ -83,6 +97,7 @@ class GameRoom extends Actor with Timers {
     case RollingDice =>
       gameState = Game(RollingDice)
       println("Dice are rolling...")
+      direRoller ! DiceRoller.RollDice // TODO: Handle receive event DiceResult
       timers.startSingleTimer("Time before making payouts", MakePayouts, 5.seconds)
 
     case MakePayouts =>

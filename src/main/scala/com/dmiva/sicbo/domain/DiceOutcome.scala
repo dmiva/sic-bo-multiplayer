@@ -36,4 +36,11 @@ final case class DiceOutcome private (a: Int, b: Int, c: Int) {
 object DiceOutcome {
   def from(a: Int, b: Int, c: Int): Option[DiceOutcome] =
     if (a >= 1 && a <= 6 && b >= 1 && b <= 6 && c >= 1 && c <= 6) Some(DiceOutcome(a, b, c)) else None
+
+  def from(a: String, b: String, c: String): Option[DiceOutcome] =
+    (a.toIntOption, b.toIntOption, c.toIntOption) match {
+      case (Some(a), Some(b), Some(c))  => Some(DiceOutcome(a, b, c))
+      case _                            => None
+    }
+
 }
