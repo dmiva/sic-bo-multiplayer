@@ -7,7 +7,7 @@ import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
 import com.dmiva.sicbo.common.{ErrorMessage, IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.domain.Player
-import com.dmiva.sicbo.domain.Player.Player
+import com.dmiva.sicbo.domain.Player.{Player, PlayerInfo}
 
 object User {
   case class Connected(wsHandle: ActorRef)
@@ -38,26 +38,24 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
     case msg: IncomingMessage => msg match {
       case Register(username, password)   => lobby ! PlayerRepository.Command.Register(username, password)
       case Login(username, password)      => lobby ! PlayerRepository.Command.Login(username, password)
-      case Logout(_) => wsHandle ! Error(ErrorMessage.NotLoggedIn)
-      case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
+      case Logout(_)                      => wsHandle ! Error(ErrorMessage.NotLoggedIn) // TODO: To be deleted?
+      case _                              => wsHandle ! OutgoingMessage.Error("Invalid request")
     }
 
     case msg: PlayerRepository.LoginResult => msg match {
-      case LoginResult.UserDoesNotExist => wsHandle ! LoginFailed // TODO: Send reason
-      case LoginResult.PasswordIncorrect => wsHandle ! LoginFailed
-      case LoginResult.Successful(user) =>
-        lobby ! GameRoom.Join(user, self) // Automatic join to game because it's the only game room
-        wsHandle ! LoginSuccessful
-        context.become(loggedIn(wsHandle, user))
+      case LoginResult.UserDoesNotExist   => wsHandle ! LoginFailed // TODO: Send reason
+      case LoginResult.PasswordIncorrect  => wsHandle ! LoginFailed
+      case LoginResult.Successful(user)   => lobby ! GameRoom.Join(user, self) // Automatic join to game because it's the only game room
+                                             wsHandle ! LoginSuccessful(PlayerInfo.from(user))
+                                             context.become(loggedIn(wsHandle, user))
     }
 
-    case msg: OutgoingMessage => wsHandle ! msg
-
-    case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
+    case msg: OutgoingMessage             => wsHandle ! msg
+    case _                                => wsHandle ! OutgoingMessage.Error("Invalid request")
 
   }
 
-  private def loggedIn(wsHandle: ActorRef, player: Player): Receive = { // TODO: Rename User
+  private def loggedIn(wsHandle: ActorRef, player: Player): Receive = {
     case Disconnected => {
       wsHandle ! Status.Success
       context.stop(self)

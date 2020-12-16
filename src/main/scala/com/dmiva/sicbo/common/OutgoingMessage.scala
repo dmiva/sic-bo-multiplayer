@@ -8,7 +8,7 @@ sealed trait OutgoingMessage
 
 object OutgoingMessage {
   case object RegistrationSuccessful extends OutgoingMessage
-  case object LoginSuccessful extends OutgoingMessage
+  case class LoginSuccessful(playerInfo: PlayerInfo) extends OutgoingMessage
   case object LoginFailed extends OutgoingMessage
   case object LoggedOut extends OutgoingMessage
   case object BetAccepted extends OutgoingMessage
@@ -23,6 +23,7 @@ object OutgoingMessage {
   ) extends OutgoingMessage
 
 //  case object GameStateChanged extends OutgoingMessage
+
 }
 
 sealed trait BetRejectReason

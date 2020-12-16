@@ -3,6 +3,7 @@ package com.dmiva.sicbo
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
+import com.dmiva.sicbo.domain.Player.{Balance, PlayerInfo, UserType}
 import com.dmiva.sicbo.domain.{Bet, BetType}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -41,8 +42,10 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
         wsClient.sendMessage(Requests.Register(testName1, testPass1))
         wsClient.expectMessage(Responses.RegistrationSuccessful)
 
+        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
-        wsClient.expectMessage(Responses.LoginSuccessful)
+        wsClient.expectMessage(Responses.LoginSuccessful(player))
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()
@@ -50,21 +53,23 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
   }
 
   test("Websocket should respond with error to the second login request") {
-    val wsServer1 = new WebService()
-    val wsClient1 = WSProbe()
-    WS(gameUri, wsClient1.flow) ~> wsServer1.routes ~>
+    val wsServer = new WebService()
+    val wsClient = WSProbe()
+    WS(gameUri, wsClient.flow) ~> wsServer.routes ~>
       check {
 //        wsClient1.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient1.expectMessage(Responses.RegistrationSuccessful)
 
-        wsClient1.sendMessage(Requests.Login(testName1, testPass1))
-        wsClient1.expectMessage(Responses.LoginSuccessful)
+        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
 
-        wsClient1.sendMessage(Requests.Login(testName1, testPass1))
-        wsClient1.expectMessage(Responses.ErrorAlreadyLoggedIn)
+        wsClient.sendMessage(Requests.Login(testName1, testPass1))
+        wsClient.expectMessage(Responses.LoginSuccessful(player))
 
-        wsClient1.sendCompletion()
-        wsClient1.expectCompletion()
+        wsClient.sendMessage(Requests.Login(testName1, testPass1))
+        wsClient.expectMessage(Responses.ErrorAlreadyLoggedIn)
+
+        wsClient.sendCompletion()
+        wsClient.expectCompletion()
       }
   }
 
@@ -76,8 +81,10 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
+        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
-        wsClient.expectMessage(Responses.LoginSuccessful)
+        wsClient.expectMessage(Responses.LoginSuccessful(player))
 
         wsClient.sendMessage(Requests.Logout(testName1))
         wsClient.expectMessage(Responses.LoggedOut)
@@ -128,8 +135,10 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
+        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
-        wsClient.expectMessage(Responses.LoginSuccessful)
+        wsClient.expectMessage(Responses.LoginSuccessful(player))
         Thread.sleep(4000)
         wsClient.sendMessage(Requests.PlaceBet(testBets))
         //        Requests.PlaceBet(testBets) shouldEqual "asd"

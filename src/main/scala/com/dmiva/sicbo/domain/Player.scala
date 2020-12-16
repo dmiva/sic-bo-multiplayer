@@ -28,8 +28,6 @@ object Player {
 
   case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance)
 
-//  case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance)
-
   case class PlayerInfo(id: Long, username: Name, userType: UserType, balance: Balance)
   object PlayerInfo {
     def from(player: Player): PlayerInfo = {

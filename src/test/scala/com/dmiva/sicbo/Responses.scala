@@ -1,6 +1,7 @@
 package com.dmiva.sicbo
 import com.dmiva.sicbo.common.{ErrorMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs.outgoingMessageOps
+import com.dmiva.sicbo.domain.Player.PlayerInfo
 
 /**
  * Encapsulates all responses to the client.<p>
@@ -8,7 +9,7 @@ import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs.outgoingMessageOps
  */
 object Responses {
   val RegistrationSuccessful: String       = OutgoingMessage.RegistrationSuccessful.toText
-  val LoginSuccessful: String       = OutgoingMessage.LoginSuccessful.toText
+  def LoginSuccessful(playerInfo: PlayerInfo): String       = OutgoingMessage.LoginSuccessful(playerInfo).toText
   val LoginFailed: String           = OutgoingMessage.LoginFailed.toText
   val LoggedOut: String             = OutgoingMessage.LoggedOut.toText
   val BetAccepted: String           = OutgoingMessage.BetAccepted.toText
