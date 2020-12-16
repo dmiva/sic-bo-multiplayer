@@ -1,20 +1,22 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
-import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Terminated, Timers}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Timers}
 import com.dmiva.sicbo.actors.DiceRoller.DiceResult
-import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
-import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error}
-import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
-import com.dmiva.sicbo.domain.GameState
-import com.dmiva.sicbo.domain.Player.Player
+import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, GamePhaseChanged}
+import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage, OutgoingMessage}
+import com.dmiva.sicbo.domain.{Bet, GamePhase, GameState}
+import com.dmiva.sicbo.domain.Player.{Player, PlayerSession}
 
+import scala.collection.IterableOnce.iterableOnceExtensionMethods
 import scala.concurrent.duration.DurationInt
 
 object GameRoom {
 
-  case class Join(player: Player, ref: ActorRef)
-  case class Leave(player: Player, ref: ActorRef)
+//  case class Join(player: Player, ref: ActorRef)
+  case class Join(ref: ActorRef, session: PlayerSession)
+  case class Leave(ref: ActorRef)
+  case class PlaceBet(player: Player, bets: List[Bet])
 
   def props() = Props(new GameRoom)
 }
@@ -22,9 +24,8 @@ object GameRoom {
 class GameRoom extends Actor with Timers with ActorLogging {
   import GameRoom._
 
-  val direRoller: ActorRef = context.actorOf(DiceRoller.props())
+  val diceRoller: ActorRef = context.actorOf(DiceRoller.props())
 
-  var gameStateOld: Game = Game(IdleOld)
   var state: GameState = GameState.initGame
 
   // Supervision strategy for the dice roller actor
@@ -34,104 +35,99 @@ class GameRoom extends Actor with Timers with ActorLogging {
       case _: Exception                => Escalate
     }
 
-  override def receive: Receive = idle(Set.empty)
+  override def receive: Receive = playing(Map())
 
-  // Initial state of room
-//  private def waitingForPlayers(players: Map[ActorRef, PlayerSession]): Receive = {
-//
-//    case Join(player, ref) =>
-//
-//
-//
-//  }
+//  private def playing(users: Set[ActorRef]): Receive = {
+  private def playing(users: Map[ActorRef, PlayerSession]): Receive = {
 
-  private def idle(users: Set[ActorRef]): Receive = {
+    case Join(ref, session) =>
+      log.info(s"${session.player.username} joined the game.")
+      if (state.phase == GamePhase.Idle) timers.startSingleTimer("Starting game...", GamePhase.PlacingBets, 3.seconds)
+      context.become(playing(users + (ref -> session)))
 
-    case Join(player, ref) =>
-      if (users.contains(ref)) {
-        // do nothing at this moment
-        ref ! Error(ErrorMessage.AlreadyLoggedIn)
-      } else {
-//        ref ! LoginSuccessful
-        context.watch(ref)
-        println(s"${player.username} joined the game. Players: ${users.size+1}")
-        if (gameStateOld == Game(IdleOld)) timers.startSingleTimer("Starting game...", PlacingBetsOld, 3.seconds)
-        context.become(idle(users + ref))
+    case Leave(ref) =>
+      users.get(ref) match {
+        case None => ref ! Error(ErrorMessage.NotLoggedIn)
+        case Some(session) =>
+          log.info(s"${session.player.username} left the game.")
+
+          context.become(playing(users - ref))
       }
 
-    case Leave(player, ref) =>
-      if (users.contains(ref)) {
-//        ref ! LoggedOut
-        println(s"${player.username} left the game. Players: ${users.size-1}") // TODO: Should search by user reference, not by name
-        context.become(idle(users.filterNot(_ == ref)))
-      } else {
-        ref ! Error(ErrorMessage.NotLoggedIn)
+    case PlaceBet(player, bets) =>
+      if (state.phase == GamePhase.PlacingBets && users.contains(sender())) {
+        state.placeBet(player, bets) match {
+          case Right(newState) =>
+            state = newState
+            sender() ! BetAccepted
+            bets.map(bet => println(s"${player.username} placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
+          case Left(e) => sender() ! BetRejected(BetRejectReason.NotEnoughBalance)
+        }
+        //        sender() ! BetAccepted
       }
-
-    case PlaceBet(bets) =>
-      if (gameStateOld == Game(PlacingBetsOld) && users.contains(sender())) {
-        sender() ! BetAccepted
-        bets.map(bet => println(s"Someone placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
-      }
-      else if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.TimeExpired)
+      else
+        if (users.contains(sender())) sender() ! BetRejected(BetRejectReason.TimeExpired)
         else sender() ! Error(ErrorMessage.NotLoggedIn)
 
 
-    case Terminated(ref: ActorRef) => // TODO: Should be handled by someone else
-      println(s"Someone disconnected the game. Players: ${users.size-1}")
-      context.become(idle(users.filterNot(_ == ref)))
+    case DiceRoller.DiceResult(dice) =>
+      log.info(s"Received dice result $dice")
+      state.applyDiceOutcome(dice) match {
+        case Right(newState) => state = newState
+        case Left(e) => log.error("Fatal error")
+      }
 
-
-    case DiceRoller.DiceResult(dice) => log.info(s"Received dice result $dice")
-
-
-
-    case IdleOld =>
-      gameStateOld = Game(IdleOld)
+    case GamePhase.Idle =>
+      state = GameState.initGame
       println("Waiting for players...")
 
-    case PlacingBetsOld =>
-      gameStateOld = Game(PlacingBetsOld)
+    case GamePhase.PlacingBets =>
+      state = state.startNewGame
+      broadcast(users,GamePhaseChanged(state.phase))
+
       println("New game started. You have 15 seconds to place bets...")
-      timers.startSingleTimer("Time before rolling dice", RollingDiceOld, 15.seconds)
+      timers.startSingleTimer("Time before rolling dice", GamePhase.RollingDice, 15.seconds)
 
-    case RollingDiceOld =>
-      gameStateOld = Game(RollingDiceOld)
+    case GamePhase.RollingDice =>
+      state = state.setGamePhase(GamePhase.RollingDice)
+      broadcast(users,GamePhaseChanged(state.phase))
+
       println("Dice are rolling...")
-      direRoller ! DiceRoller.RollDice // TODO: Handle receive event DiceResult
-      timers.startSingleTimer("Time before making payouts", MakePayoutsOld, 5.seconds)
+      diceRoller ! DiceRoller.RollDice
+      timers.startSingleTimer("Time before making payouts", GamePhase.MakePayouts, 5.seconds)
 
-    case MakePayoutsOld =>
-      gameStateOld = Game(MakePayoutsOld)
+    case GamePhase.MakePayouts =>
+      state = state.setGamePhase(GamePhase.MakePayouts)
+      broadcast(users,GamePhaseChanged(state.phase))
       println("Making payouts...")
-      timers.startSingleTimer("Time before new round", GameEndedOld, 5.seconds)
+      state.calculateResults match {
+        case Right(newState) => state = newState
+        case Left(e) => log.error("Something bad happened")
+      }
+      println(state.gameResult)
 
-    case GameEndedOld =>
+      state.gameResult.foreachEntry {
+        case (player, result) =>
+          users.find { case (_, session) => session.player == player } match {
+            case Some((ref, session)) =>
+              ref ! result
+            case None =>
+          }
+      }
+
+
+      timers.startSingleTimer("Time before new round", GamePhase.GameEnded, 5.seconds)
+
+    case GamePhase.GameEnded =>
       println("Game ended.")
       if (users.nonEmpty)
-        self ! PlacingBetsOld
+        self ! GamePhase.PlacingBets
       else
-        self ! IdleOld
+        self ! GamePhase.Idle
   }
 
-//  private def playing(users: Set[ActorRef]): Receive = {
-//
-//  }
-
-
-}
-
-object Game {
+  def broadcast(players: Map[ActorRef, PlayerSession], msg: OutgoingMessage): Unit = {
+    players.foreach(player => player._1 ! msg) // TODO: Refactor
+  }
 
 }
-
-case class Game(currentState: GameStateOld)
-
-sealed trait GameStateOld
-
-case object IdleOld extends GameStateOld
-case object PlacingBetsOld extends GameStateOld
-case object RollingDiceOld extends GameStateOld
-case object MakePayoutsOld extends GameStateOld
-case object GameEndedOld extends GameStateOld
-

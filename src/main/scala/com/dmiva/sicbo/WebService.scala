@@ -1,6 +1,6 @@
 package com.dmiva.sicbo
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.{ActorSystem, Status}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
@@ -44,7 +44,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
         .to(Sink.actorRef(newUserActor, User.Disconnected, _ => User.Disconnected))
 
     val sourceCompletionMatcher: PartialFunction[Any, CompletionStrategy] = {
-      case Status.Success =>
+      case Done =>
         // complete stream immediately if we send it Status.Success
         CompletionStrategy.immediately
     }

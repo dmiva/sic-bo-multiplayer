@@ -141,7 +141,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
         wsClient.expectMessage(Responses.LoginSuccessful(player))
         Thread.sleep(4000)
         wsClient.sendMessage(Requests.PlaceBet(testBets))
-        //        Requests.PlaceBet(testBets) shouldEqual "asd"
+                Requests.PlaceBet(testBets) shouldEqual "asd"
         wsClient.expectMessage(Responses.BetAccepted)
 
         wsClient.sendCompletion()

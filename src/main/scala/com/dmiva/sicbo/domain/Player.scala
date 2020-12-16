@@ -2,7 +2,7 @@ package com.dmiva.sicbo.domain
 
 import akka.actor.ActorRef
 
-object Player {
+object Player { // TODO: Tidy up this mess
 
 //  sealed trait Currency
 //  object Currency {
@@ -19,6 +19,7 @@ object Player {
   }
   type Name = String
   type Password = String
+//  type Error = String
 
   case class Balance(amount: BigDecimal) extends AnyVal {
     def +(other: Balance): Balance = {

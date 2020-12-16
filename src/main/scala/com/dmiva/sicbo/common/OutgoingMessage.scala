@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.common
 
-import com.dmiva.sicbo.domain.{BetType, DiceOutcome}
+import com.dmiva.sicbo.domain.{BetType, DiceOutcome, GamePhase}
 import com.dmiva.sicbo.domain.Player.PlayerInfo
 
 // Messages from server to client
@@ -22,7 +22,7 @@ object OutgoingMessage {
                          playerInfo: PlayerInfo
   ) extends OutgoingMessage
 
-//  case object GameStateChanged extends OutgoingMessage
+  case class GamePhaseChanged(newPhase: GamePhase) extends OutgoingMessage
 
 }
 

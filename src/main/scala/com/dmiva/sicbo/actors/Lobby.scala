@@ -18,7 +18,7 @@ class Lobby extends Actor {
     case msg: PlayerRepository.Command.Register  => playerRepository forward msg
     case msg: PlayerRepository.Command.Login => playerRepository forward msg
 
-    case msg: IncomingMessage.PlaceBet  => gameRoom forward msg
+    case msg: GameRoom.PlaceBet         => gameRoom forward msg
     case msg: GameRoom.Join             => gameRoom forward msg
     case msg: GameRoom.Leave            => gameRoom forward msg
   }
