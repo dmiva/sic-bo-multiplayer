@@ -8,7 +8,7 @@ import akka.util.ByteString
 import com.dmiva.sicbo.domain.DiceOutcome
 
 import scala.concurrent.Future
-import scala.util.Random
+import scala.util.{Failure, Random, Success, Try}
 
 object DiceRoller {
   // Command

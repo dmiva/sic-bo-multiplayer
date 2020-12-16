@@ -11,6 +11,13 @@ object GameState {
     dice = None,
     gameResult = Map.empty
   )
+
+  def initGame: GameState = GameState(
+    phase = GamePhase.Idle,
+    playersBets = Map.empty,
+    dice = None,
+    gameResult = Map.empty
+  )
 }
 
 final case class GameState(

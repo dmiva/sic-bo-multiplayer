@@ -2,14 +2,14 @@ package com.dmiva.sicbo.actors.repository
 
 import akka.actor.{ActorRef, Props}
 import akka.persistence.{PersistentActor, SnapshotOffer}
-import com.dmiva.sicbo.actors.repository.UserRepository.Command.{Login, Register}
-import com.dmiva.sicbo.actors.repository.UserRepository.RegistrationResult._
-import UserRepository.{Event, LoginResult}
-import com.dmiva.sicbo.actors.repository.UserRepository.LoginResult.PasswordIncorrect
+import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Register}
+import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult._
+import PlayerRepository.{Event, LoginResult}
+import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult.PasswordIncorrect
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, RegistrationSuccessful}
-import com.dmiva.sicbo.domain.Player.{Name, Password, User, UserType}
+import com.dmiva.sicbo.domain.Player.{Balance, Name, Password, Player, UserType}
 
-object UserRepository {
+object PlayerRepository {
 
   sealed trait Command
   object Command {
@@ -19,7 +19,7 @@ object UserRepository {
 
   sealed trait Event
   object Event {
-    case class Registered(username: Name, user: User) extends Event
+    case class Registered(username: Name, player: Player) extends Event
   }
 
   sealed trait RegistrationResult
@@ -27,29 +27,29 @@ object UserRepository {
     case object Successful extends RegistrationResult
     case object UsernameIsBlank extends RegistrationResult
     case object PasswordTooShort extends RegistrationResult
-    case object UserAlreadyExists extends RegistrationResult
+    case object PlayerAlreadyExists extends RegistrationResult
 
     implicit def convertToString(msg: RegistrationResult): String = msg.toString
   }
 
   sealed trait LoginResult
   object LoginResult {
-    case class Successful(user: User) extends LoginResult
+    case class Successful(player: Player) extends LoginResult
     case object UserDoesNotExist extends LoginResult
     case object PasswordIncorrect extends LoginResult
 
     implicit def convertToString(msg: LoginResult): String = msg.toString
   }
 
-  def props(): Props = Props[UserRepository]
+  def props(): Props = Props[PlayerRepository]
   val persistenceId = "user-repository-id-1"
 }
 
-class UserRepository extends PersistentActor {
+class PlayerRepository extends PersistentActor {
 
-  override def persistenceId: String = UserRepository.persistenceId
+  override def persistenceId: String = PlayerRepository.persistenceId
 
-  var storage: UserStorage = UserStorage(Map.empty)
+  var storage: PlayerStorage = PlayerStorage(Map.empty)
 
   def updateStorage(event: Event): Unit = {
     storage = storage.updated(event)
@@ -57,7 +57,7 @@ class UserRepository extends PersistentActor {
 
   override def receiveRecover: Receive = {
     case evt: Event => updateStorage(evt)
-    case SnapshotOffer(_, snapshot: UserStorage) => storage = snapshot
+    case SnapshotOffer(_, snapshot: PlayerStorage) => storage = snapshot
   }
 
   val snapshotInterval = 5
@@ -69,7 +69,7 @@ class UserRepository extends PersistentActor {
       val result = (name, pw) match {
         case (name, _)  if name.isBlank                    => Left(Error(UsernameIsBlank))
         case (_, pw)    if pw.length < 4                   => Left(Error(PasswordTooShort))
-        case (name, _)  if storage.isUserRegistered(name)  => Left(Error(UserAlreadyExists))
+        case (name, _)  if storage.isPlayerRegistered(name)  => Left(Error(PlayerAlreadyExists))
         case success                                       => Right(success)
       }
       result match {
@@ -79,16 +79,16 @@ class UserRepository extends PersistentActor {
         case Right((name, pw)) =>
           // 3. If command succeeds, then an event is generated, and persisted
           // 4. The generated event is then internally sent back to this actor and handled
-          persist(Event.Registered(name, User(0, name, pw, UserType.User)))(event => handleEvent(event, replyTo)) // TODO: Implement Id
+          persist(Event.Registered(name, Player(0, name, pw, UserType.User, Balance(100))))(event => handleEvent(event, replyTo)) // TODO: Implement Id
       }
     }
     case Login(name, pw) => {
       val replyTo = sender()
-      val user = storage.getUserByName(name)
-      val loginResult = user match {
-        case Some(user) if user.password == pw  => LoginResult.Successful(user)
-        case Some(_)                            => LoginResult.PasswordIncorrect
-        case None                               => LoginResult.UserDoesNotExist
+      val player = storage.getPlayerByName(name)
+      val loginResult = player match {
+        case Some(player) if player.password == pw  => LoginResult.Successful(player)
+        case Some(_)                                => LoginResult.PasswordIncorrect
+        case None                                   => LoginResult.UserDoesNotExist
       }
       replyTo ! loginResult
     }

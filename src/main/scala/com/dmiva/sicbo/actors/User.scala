@@ -1,12 +1,13 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
-import com.dmiva.sicbo.actors.repository.UserRepository
-import com.dmiva.sicbo.actors.repository.UserRepository.LoginResult
+import com.dmiva.sicbo.actors.repository.PlayerRepository
+import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
 import com.dmiva.sicbo.common.{ErrorMessage, IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.domain.Player
+import com.dmiva.sicbo.domain.Player.Player
 
 object User {
   case class Connected(wsHandle: ActorRef)
@@ -35,13 +36,13 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
     }
 
     case msg: IncomingMessage => msg match {
-      case Register(username, password)   => lobby ! UserRepository.Command.Register(username, password)
-      case Login(username, password)      => lobby ! UserRepository.Command.Login(username, password)
+      case Register(username, password)   => lobby ! PlayerRepository.Command.Register(username, password)
+      case Login(username, password)      => lobby ! PlayerRepository.Command.Login(username, password)
       case Logout(_) => wsHandle ! Error(ErrorMessage.NotLoggedIn)
       case _ => wsHandle ! OutgoingMessage.Error("Invalid request")
     }
 
-    case msg: UserRepository.LoginResult => msg match {
+    case msg: PlayerRepository.LoginResult => msg match {
       case LoginResult.UserDoesNotExist => wsHandle ! LoginFailed // TODO: Send reason
       case LoginResult.PasswordIncorrect => wsHandle ! LoginFailed
       case LoginResult.Successful(user) =>
@@ -56,7 +57,7 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
 
   }
 
-  private def loggedIn(wsHandle: ActorRef, user: Player.User): Receive = { // TODO: Rename User
+  private def loggedIn(wsHandle: ActorRef, player: Player): Receive = { // TODO: Rename User
     case Disconnected => {
       wsHandle ! Status.Success
       context.stop(self)
@@ -66,7 +67,7 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
       case bet: PlaceBet => lobby ! bet
       case Login(_, _) => wsHandle ! Error(ErrorMessage.AlreadyLoggedIn)
       case Logout(_) =>
-        lobby ! GameRoom.Leave(user, self)
+        lobby ! GameRoom.Leave(player, self)
         wsHandle ! LoggedOut
         context.become(connected(wsHandle))
       case _ => wsHandle ! OutgoingMessage.Error("Invalid request")

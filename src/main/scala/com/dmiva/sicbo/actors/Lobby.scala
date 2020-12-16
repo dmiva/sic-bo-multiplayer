@@ -2,7 +2,7 @@ package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, Props}
 import com.dmiva.sicbo.actors
-import com.dmiva.sicbo.actors.repository.UserRepository
+import com.dmiva.sicbo.actors.repository.PlayerRepository
 import com.dmiva.sicbo.common.IncomingMessage
 
 object Lobby {
@@ -12,11 +12,11 @@ object Lobby {
 // a.k.a API Gateway
 class Lobby extends Actor {
   private val gameRoom = context.actorOf(GameRoom.props())
-  private val userRepository = context.actorOf(UserRepository.props())
+  private val playerRepository = context.actorOf(PlayerRepository.props())
 
   override def receive: Receive = {
-    case msg: UserRepository.Command.Register  => userRepository forward msg
-    case msg: UserRepository.Command.Login => userRepository forward msg
+    case msg: PlayerRepository.Command.Register  => playerRepository forward msg
+    case msg: PlayerRepository.Command.Login => playerRepository forward msg
 
     case msg: IncomingMessage.PlaceBet  => gameRoom forward msg
     case msg: GameRoom.Join             => gameRoom forward msg
