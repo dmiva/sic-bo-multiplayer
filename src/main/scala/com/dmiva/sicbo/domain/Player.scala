@@ -20,11 +20,27 @@ object Player {
   type Name = String
   type Password = String
 
-  case class Balance(amount: BigDecimal) extends AnyVal
+  case class Balance(amount: BigDecimal) extends AnyVal {
+    def +(other: Balance): Balance = {
+      copy(amount = amount + other.amount)
+    }
+  }
 
   case class User(id: Long, username: Name, password: Password, userType: UserType)
 
-  case class Player(id: Long, username: Name, balance: Balance)
+  case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance)
+
+  case class PlayerInfo(id: Long, username: Name, userType: UserType, balance: Balance)
+  object PlayerInfo {
+    def from(player: Player): PlayerInfo = {
+      PlayerInfo(
+        id = player.id,
+        username = player.username,
+        userType = player.userType,
+        balance = player.balance
+      )
+    }
+  }
 
   case class PlayerSession(player: Player, ref: ActorRef)
 }

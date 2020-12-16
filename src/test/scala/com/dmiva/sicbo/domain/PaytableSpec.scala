@@ -251,7 +251,7 @@ class PaytableSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenProper
 
     val listOfBets = List(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10)
 
-    val winAmount = paytable.getWinning(listOfBets)
+    val winAmount = paytable.getWinningTotal(listOfBets)
     val expectedWinAmount = 20 + 20 + 30 + 60 + 70
 
     winAmount shouldEqual expectedWinAmount
@@ -274,7 +274,7 @@ class PaytableSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenProper
 
     val listOfBets = List(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10)
 
-    val winAmount = paytable.getWinning(listOfBets)
+    val winAmount = paytable.getWinningTotal(listOfBets)
     val expectedWinAmount = 40 + 70 + 90 + 1510 + 310
 
     winAmount shouldEqual expectedWinAmount
@@ -297,7 +297,7 @@ class PaytableSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenProper
 
     val listOfBets = List(b1,b2,b3,b4,b5,b6,b7,b8,b9,b10)
 
-    val winAmount = paytable.getWinning(listOfBets)
+    val winAmount = paytable.getWinningTotal(listOfBets)
     val expectedWinAmount = 20 + 20 + 20 + 160 + 60
 
     winAmount shouldEqual expectedWinAmount

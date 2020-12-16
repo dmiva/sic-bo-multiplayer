@@ -6,7 +6,7 @@ import com.dmiva.sicbo.actors.repository.UserRepository.Command.{Login, Register
 import com.dmiva.sicbo.actors.repository.UserRepository.RegistrationResult._
 import UserRepository.{Event, LoginResult}
 import com.dmiva.sicbo.actors.repository.UserRepository.LoginResult.PasswordIncorrect
-import com.dmiva.sicbo.common.OutgoingMessage.{Error, Ok, RegistrationSuccessful}
+import com.dmiva.sicbo.common.OutgoingMessage.{Error, RegistrationSuccessful}
 import com.dmiva.sicbo.domain.Player.{Name, Password, User, UserType}
 
 object UserRepository {

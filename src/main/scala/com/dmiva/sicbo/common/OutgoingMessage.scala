@@ -1,5 +1,8 @@
 package com.dmiva.sicbo.common
 
+import com.dmiva.sicbo.domain.{BetType, DiceOutcome}
+import com.dmiva.sicbo.domain.Player.PlayerInfo
+
 // Messages from server to client
 sealed trait OutgoingMessage
 
@@ -10,9 +13,14 @@ object OutgoingMessage {
   case object LoggedOut extends OutgoingMessage
   case object BetAccepted extends OutgoingMessage
   case class BetRejected(reason: String) extends OutgoingMessage
-
   case class Error(text: String) extends OutgoingMessage
   case class Ok(text: String) extends OutgoingMessage
+  case class GameResult(
+                         diceOutcome: DiceOutcome,
+                         winningBetTypes: List[BetType],
+                         totalWin: BigDecimal,
+                         playerInfo: PlayerInfo
+  ) extends OutgoingMessage
 
 //  case object GameStateChanged extends OutgoingMessage
 }

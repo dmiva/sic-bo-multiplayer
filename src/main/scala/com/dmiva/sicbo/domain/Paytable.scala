@@ -77,6 +77,6 @@ final case class Paytable(dice: DiceOutcome) {
     }
   }
 
-  def getWinning(bets: List[Bet]): Int = applyPayout(bets).map(bet => getWinning(bet)).sum
+  def getWinningTotal(bets: List[Bet]): Int = applyPayout(bets).map(bet => getWinning(bet)).sum
 }
 

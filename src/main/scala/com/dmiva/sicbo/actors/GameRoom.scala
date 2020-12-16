@@ -4,9 +4,8 @@ import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Terminated, Timers}
 import com.dmiva.sicbo.actors.DiceRoller.DiceResult
 import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
-import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, LoggedOut, LoginSuccessful}
+import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage}
-import com.dmiva.sicbo.domain.Player.PlayerSession
 import com.dmiva.sicbo.domain.Player.User
 
 import scala.concurrent.duration.DurationInt
