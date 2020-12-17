@@ -59,11 +59,7 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
 
   }
 
-  /**
-   * At this state name is in the game room
-   * @param wsHandle
-   * @param player
-   */
+  /** At this state user is in the game room */
   private def loggedIn(wsHandle: ActorRef, player: Player): Receive = {
 
     case Disconnected =>

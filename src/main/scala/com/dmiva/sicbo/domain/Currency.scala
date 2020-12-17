@@ -1,5 +1,6 @@
 package com.dmiva.sicbo.domain
 
+/** Not used */
 sealed trait Currency
 object Currency {
   case object EUR extends Currency

@@ -1,6 +1,7 @@
 package com.dmiva.sicbo.common
 
 import com.dmiva.sicbo.domain.{Balance, BetType, DiceOutcome, GamePhase, Name, PlayerInfo}
+import io.circe.Printer
 
 // Messages from server to client
 sealed trait OutgoingMessage
@@ -24,6 +25,8 @@ object OutgoingMessage {
 
   case class GamePhaseChanged(newPhase: GamePhase) extends OutgoingMessage
 
+
+  implicit val customPrinter = Printer.spaces2.copy(dropNullValues = true)
 }
 
 sealed trait BetRejectReason
