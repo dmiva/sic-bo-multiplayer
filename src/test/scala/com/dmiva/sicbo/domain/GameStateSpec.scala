@@ -7,12 +7,14 @@ import com.dmiva.sicbo.domain.Player.{Balance, Player, UserType}
 import io.circe.Decoder.state
 
 class GameStateSpec extends AnyFunSuite with Matchers {
+  
+  val userType = UserType.User
 
   test("Should be able to place bet") {
 
     val initialBalance = BigDecimal(100)
     val betAmount = BigDecimal(50)
-    val player = Player(0, "name", "pass", UserType.User, Balance(initialBalance))
+    val player = Player(0, "name", "pass", userType, Balance(initialBalance))
     val bets = List(
       Bet(Some(betAmount), BetType.Total(18), None)
     )
@@ -40,7 +42,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
   test("Should not be able to place bet in other game phases") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.RollingDice)
 
-    val player = Player(0, "name", "pass", UserType.User, Balance(100))
+    val player = Player(0, "name", "pass", userType, Balance(100))
     val bets = List(
       Bet(Some(20), BetType.Total(5), None),
       Bet(Some(50), BetType.Total(18), None)
@@ -59,7 +61,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("Should be able to apply dice outcome") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.RollingDice)
-    val player = Player(0, "name", "pass", UserType.User, Balance(100))
+    val player = Player(0, "name", "pass", userType, Balance(100))
 
     val bets = List(
       Bet(Some(20), BetType.Total(5), None),
@@ -77,7 +79,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("Should not be able to apply dice outcome in incorrect game phase") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.PlacingBets)
-    val player = Player(0, "name", "pass", UserType.User, Balance(100))
+    val player = Player(0, "name", "pass", userType, Balance(100))
 
     val bets = List(
       Bet(Some(20), BetType.Total(5), None),
@@ -91,7 +93,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("Calculate game results with betting #1") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.PlacingBets)
-    val player = Player(0, "name", "pass", UserType.User, Balance(100))
+    val player = Player(0, "name", "pass", userType, Balance(100))
 
     val dice = DiceOutcome(1,3,5)
     val bets = List(
@@ -121,7 +123,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
     val initialBalance = BigDecimal(1000)
     val betAmount = BigDecimal(50)
 
-    val player: Player = Player(0, "Player1", "pw", UserType.User, Balance(initialBalance))
+    val player: Player = Player(0, "Player1", "pw", userType, Balance(initialBalance))
 
     val bets: List[Bet] = List(
       Bet(Some(betAmount), BetType.Total(8), None), // win = 0
@@ -157,7 +159,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
     val initialBalance = BigDecimal(1000)
     val betAmount = BigDecimal(50)
 
-    val player: Player = Player(0, "Player1", "pw", UserType.User, Balance(initialBalance))
+    val player: Player = Player(0, "Player1", "pw", userType, Balance(initialBalance))
 
     val bets: List[Bet] = List.empty
 
@@ -196,7 +198,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
     val initialBalance = BigDecimal(1000)
     val betAmount = BigDecimal(50)
 
-    val player: Player = Player(0, "Player1", "pw", UserType.User, Balance(initialBalance))
+    val player: Player = Player(0, "Player1", "pw", userType, Balance(initialBalance))
 
     val bets: List[Bet] = List(
       Bet(Some(betAmount), BetType.Total(8), None), // win = 0

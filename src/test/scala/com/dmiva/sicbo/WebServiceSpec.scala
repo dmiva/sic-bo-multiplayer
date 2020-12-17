@@ -14,6 +14,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //  val wsClient: WSProbe = WSProbe()
   val gameUri = "/game"
 
+  val userType = UserType.User
   val testName1 = "Hacker777"
   val testPass1 = "Password123"
   val testName2 = "' or '1'='1"
@@ -42,7 +43,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
         wsClient.sendMessage(Requests.Register(testName1, testPass1))
         wsClient.expectMessage(Responses.RegistrationSuccessful)
 
-        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+        val player = PlayerInfo(0, testName1, userType, Balance(100))
 
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful(player))
@@ -60,7 +61,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient1.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient1.expectMessage(Responses.RegistrationSuccessful)
 
-        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+        val player = PlayerInfo(0, testName1, userType, Balance(100))
 
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful(player))
@@ -81,7 +82,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
-        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+        val player = PlayerInfo(0, testName1, userType, Balance(100))
 
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful(player))
@@ -135,7 +136,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient.sendMessage(Requests.Register(testName1, testPass1))
 //        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
-        val player = PlayerInfo(0, testName1, UserType.User, Balance(100))
+        val player = PlayerInfo(0, testName1, userType, Balance(100))
 
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful(player))

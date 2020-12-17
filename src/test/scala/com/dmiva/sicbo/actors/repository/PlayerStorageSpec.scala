@@ -6,13 +6,14 @@ import org.scalatest.matchers.should.Matchers
 
 class PlayerStorageSpec extends AnyFunSuite with Matchers {
 
+  val userType: UserType = UserType.User
   val nameThatExists = "Name_4"
-  val userThatExists: Player = Player(4, nameThatExists, "Password_4", UserType.User, Balance(0))
+  val userThatExists: Player = Player(4, nameThatExists, "Password_4", userType, Balance(0))
   val nameThatDontExist = "Name_1123"
 
   def populateStorage(storage: PlayerStorage, numOfUsers: Int): PlayerStorage = {
     val name = s"Name_$numOfUsers"
-    val user = Player(numOfUsers, name, s"Password_$numOfUsers", UserType.User, Balance(0))
+    val user = Player(numOfUsers, name, s"Password_$numOfUsers", userType, Balance(0))
     if (numOfUsers > 0) populateStorage(storage.copy(storage.players + (name -> user)), numOfUsers - 1)
     else storage
   }
@@ -20,7 +21,7 @@ class PlayerStorageSpec extends AnyFunSuite with Matchers {
   test("User storage should append users") {
     val storage = populateStorage(PlayerStorage(), 10)
     val name1 = "NewUser"
-    val user1 = Player(123, name1, "NewPass", UserType.User, Balance(0))
+    val user1 = Player(123, name1, "NewPass", userType, Balance(0))
     val event1 = PlayerRepository.Event.Registered(name1, user1)
 
     storage.players.size shouldEqual 10
