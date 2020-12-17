@@ -1,7 +1,6 @@
 package com.dmiva.sicbo.common
 
-import com.dmiva.sicbo.domain.{BetType, DiceOutcome, GamePhase}
-import com.dmiva.sicbo.domain.Player.{Balance, Name, PlayerInfo}
+import com.dmiva.sicbo.domain.{Balance, BetType, DiceOutcome, GamePhase, Name, PlayerInfo}
 
 // Messages from server to client
 sealed trait OutgoingMessage

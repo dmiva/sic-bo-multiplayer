@@ -1,7 +1,6 @@
 package com.dmiva.sicbo.common
 
-import com.dmiva.sicbo.domain.Bet
-import com.dmiva.sicbo.domain.Player.{Name, Password}
+import com.dmiva.sicbo.domain.{Bet, Name, Password}
 
 // Messages from client to server
 sealed trait IncomingMessage

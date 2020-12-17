@@ -3,9 +3,7 @@ package com.dmiva.sicbo.actors
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.{HttpResponse, Uri}
 import akka.testkit.{TestKit, TestProbe}
-import com.dmiva.sicbo.domain.DiceOutcome
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

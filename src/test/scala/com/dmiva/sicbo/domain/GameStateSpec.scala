@@ -3,8 +3,6 @@ package com.dmiva.sicbo.domain
 import com.dmiva.sicbo.common.BetRejectReason
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
-import com.dmiva.sicbo.domain.Player.{Balance, Player, UserType}
-import io.circe.Decoder.state
 
 class GameStateSpec extends AnyFunSuite with Matchers {
   

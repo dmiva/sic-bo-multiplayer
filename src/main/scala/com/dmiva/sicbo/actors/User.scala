@@ -7,7 +7,7 @@ import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
 import com.dmiva.sicbo.common.{ErrorMessage, IncomingMessage, OutgoingMessage}
-import com.dmiva.sicbo.domain.Player.{Player, PlayerInfo, PlayerSession}
+import com.dmiva.sicbo.domain.{Player, PlayerInfo, PlayerSession}
 
 object User {
   case class Connected(wsHandle: ActorRef)

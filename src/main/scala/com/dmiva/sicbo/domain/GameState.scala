@@ -2,7 +2,7 @@ package com.dmiva.sicbo.domain
 
 import com.dmiva.sicbo.common.BetRejectReason
 import com.dmiva.sicbo.common.OutgoingMessage.GameResult
-import com.dmiva.sicbo.domain.Player.{Balance, Name, Player}
+
 
 object GameState {
 

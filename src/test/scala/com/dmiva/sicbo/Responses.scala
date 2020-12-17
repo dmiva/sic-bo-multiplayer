@@ -1,8 +1,8 @@
 package com.dmiva.sicbo
+import com.dmiva.sicbo.common.OutgoingMessage.LoginFailed
 import com.dmiva.sicbo.common.{ErrorMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs.outgoingMessageOps
-import com.dmiva.sicbo.domain.GamePhase
-import com.dmiva.sicbo.domain.Player.PlayerInfo
+import com.dmiva.sicbo.domain.{GamePhase, PlayerInfo}
 
 /**
  * Encapsulates all responses to the client.<p>

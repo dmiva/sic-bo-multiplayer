@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.actors.repository
 
-import com.dmiva.sicbo.domain.Player.{Balance, Player, UserType}
+import com.dmiva.sicbo.domain.{Balance, Player, UserType}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 

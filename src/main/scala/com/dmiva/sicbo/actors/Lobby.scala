@@ -1,9 +1,7 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, Props}
-import com.dmiva.sicbo.actors
 import com.dmiva.sicbo.actors.repository.PlayerRepository
-import com.dmiva.sicbo.common.IncomingMessage
 
 object Lobby {
   def props() = Props(new Lobby())

@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.actors.repository
 
-import com.dmiva.sicbo.domain.Player.{Name, Player}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.Event
+import com.dmiva.sicbo.domain.{Name, Player}
 
 
 case class PlayerStorage(players: Map[Name, Player] = Map.empty) extends CborSerializable {

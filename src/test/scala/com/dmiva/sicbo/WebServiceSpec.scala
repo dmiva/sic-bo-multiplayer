@@ -2,9 +2,7 @@ package com.dmiva.sicbo
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
-import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
-import com.dmiva.sicbo.domain.Player.{Balance, PlayerInfo, UserType}
-import com.dmiva.sicbo.domain.{Bet, BetType, GamePhase}
+import com.dmiva.sicbo.domain.{Balance, Bet, BetType, GamePhase, PlayerInfo, UserType}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 

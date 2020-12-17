@@ -5,8 +5,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Time
 import com.dmiva.sicbo.actors.repository.PlayerRepository
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, GamePhaseChanged}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage, OutgoingMessage}
-import com.dmiva.sicbo.domain.{Bet, GamePhase, GameState}
-import com.dmiva.sicbo.domain.Player.{Balance, Player, PlayerSession}
+import com.dmiva.sicbo.domain.{Balance, Bet, GamePhase, GameState, Player, PlayerSession}
 
 import scala.concurrent.duration.DurationInt
 
@@ -133,7 +132,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
   }
 
   def broadcast(players: Map[ActorRef, PlayerSession], msg: OutgoingMessage): Unit = {
-    players.foreach(player => player._1 ! msg) // TODO: Refactor
+    players.foreach { case (ref, _) => ref ! msg}
   }
 
 }

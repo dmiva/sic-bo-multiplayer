@@ -6,7 +6,7 @@ import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Regist
 import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult._
 import PlayerRepository.{Event, LoginResult}
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, RegistrationSuccessful}
-import com.dmiva.sicbo.domain.Player.{Balance, Name, Password, Player, UserType}
+import com.dmiva.sicbo.domain.{Balance, Name, Password, Player, UserType}
 
 object PlayerRepository {
 
@@ -42,7 +42,7 @@ object PlayerRepository {
     implicit def convertToString(msg: LoginResult): String = msg.toString
   }
 
-  def props(): Props = Props[PlayerRepository]
+  def props(): Props = Props(new PlayerRepository)
   val persistenceId = "player-repository-id-1"
 }
 
