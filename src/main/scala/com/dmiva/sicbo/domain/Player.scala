@@ -1,6 +1,7 @@
 package com.dmiva.sicbo.domain
 
 import akka.actor.ActorRef
+import com.dmiva.sicbo.actors.repository.CborSerializable
 
 object Player { // TODO: Tidy up this mess
 
@@ -12,7 +13,7 @@ object Player { // TODO: Tidy up this mess
 //  }
 //  case class Balance(amount: Int, currency: Currency)
 
-  sealed trait UserType
+  sealed trait UserType extends CborSerializable
   object UserType {
     case object User extends UserType
     case object Admin extends UserType
@@ -29,7 +30,7 @@ object Player { // TODO: Tidy up this mess
 //    implicit def intToBigDecimal(int: Int): BigDecimal = BigDecimal(int)
   }
 
-  case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance)
+  final case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance) extends CborSerializable
 
   case class PlayerInfo(id: Long, username: Name, userType: UserType, balance: Balance)
   object PlayerInfo {

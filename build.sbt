@@ -26,6 +26,7 @@ libraryDependencies ++= Seq(
   "org.scalatestplus" %% "scalatestplus-scalacheck" % scalaTestPlusVersion % Test,
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
+  "com.typesafe.akka" %% "akka-serialization-jackson" % akkaVersion,
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,

@@ -1,24 +1,23 @@
 package com.dmiva.sicbo.actors.repository
 
-import akka.actor.{ActorRef, Props}
-import akka.persistence.{PersistentActor, SnapshotOffer}
+import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Register, UpdateBalance}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult._
 import PlayerRepository.{Event, LoginResult}
-import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult.PasswordIncorrect
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, RegistrationSuccessful}
 import com.dmiva.sicbo.domain.Player.{Balance, Name, Password, Player, UserType}
 
 object PlayerRepository {
 
-  sealed trait Command
+  sealed trait Command extends CborSerializable
   object Command {
     case class Register(username: Name, password: Password) extends Command
     case class Login(username: Name, password: Password) extends Command
     case class UpdateBalance(username: Name, balance: Balance) extends Command
   }
 
-  sealed trait Event
+  sealed trait Event extends CborSerializable
   object Event {
     case class Registered(username: Name, player: Player) extends Event
     case class BalanceUpdated(username: Name, player: Player) extends Event
@@ -44,10 +43,10 @@ object PlayerRepository {
   }
 
   def props(): Props = Props[PlayerRepository]
-  val persistenceId = "user-repository-id-1"
+  val persistenceId = "player-repository-id-1"
 }
 
-class PlayerRepository extends PersistentActor {
+class PlayerRepository extends PersistentActor with ActorLogging {
 
   override def persistenceId: String = PlayerRepository.persistenceId
 
@@ -66,6 +65,10 @@ class PlayerRepository extends PersistentActor {
 
   // 1. Actor receives commands (messages)
   override def receiveCommand: Receive = {
+    case SaveSnapshotSuccess(metadata)         =>
+      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
+    case SaveSnapshotFailure(metadata, reason) =>
+      log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
     case Register(name, pw) => {
       val replyTo = sender()
       val result = (name, pw) match {
@@ -115,7 +118,7 @@ class PlayerRepository extends PersistentActor {
     // 6. Reply to the sender of the command about success
     event match {
       case Event.Registered(_,_) => replyTo ! RegistrationSuccessful
-      case Event.BalanceUpdated(_,_) => () // do nothing else
+      case Event.BalanceUpdated(_,_) => () // do nothing else TODO: Send player info to player
     }
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0)
       saveSnapshot(storage)

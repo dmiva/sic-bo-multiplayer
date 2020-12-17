@@ -4,7 +4,7 @@ import com.dmiva.sicbo.domain.Player.{Name, Player}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.Event
 
 
-case class PlayerStorage(players: Map[Name, Player] = Map.empty) {
+case class PlayerStorage(players: Map[Name, Player] = Map.empty) extends CborSerializable {
 
   def getPlayerByName(username: Name): Option[Player] = {
     players.get(username)
