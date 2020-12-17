@@ -17,6 +17,7 @@ case class PlayerStorage(players: Map[Name, Player] = Map.empty) {
   def updated(event: Event): PlayerStorage = {
     event match {
       case Event.Registered(name, player) => this.copy(players = players + (name -> player))
+      case Event.BalanceUpdated(name, player) => this.copy(players = players + (name -> player))
     }
   }
 

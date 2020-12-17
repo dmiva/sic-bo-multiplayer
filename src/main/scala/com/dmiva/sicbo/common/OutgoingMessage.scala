@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.common
 
 import com.dmiva.sicbo.domain.{BetType, DiceOutcome, GamePhase}
-import com.dmiva.sicbo.domain.Player.PlayerInfo
+import com.dmiva.sicbo.domain.Player.{Balance, Name, PlayerInfo}
 
 // Messages from server to client
 sealed trait OutgoingMessage
@@ -19,7 +19,8 @@ object OutgoingMessage {
                          diceOutcome: DiceOutcome,
                          winningBetTypes: List[BetType],
                          totalWin: BigDecimal,
-                         playerInfo: PlayerInfo
+                         balance: Balance,
+                         username: Name
   ) extends OutgoingMessage
 
   case class GamePhaseChanged(newPhase: GamePhase) extends OutgoingMessage
@@ -30,6 +31,7 @@ sealed trait BetRejectReason
 object BetRejectReason {
   val NotEnoughBalance = "Not enough balance"
   val TimeExpired = "Wait for the next round"
+  def PlayerNotInGame(name: String) = s"Player $name is not in game"
 }
 
 sealed trait ErrorMessage

@@ -2,7 +2,7 @@ package com.dmiva.sicbo.actors.repository
 
 import akka.actor.{ActorRef, Props}
 import akka.persistence.{PersistentActor, SnapshotOffer}
-import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Register}
+import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Register, UpdateBalance}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult._
 import PlayerRepository.{Event, LoginResult}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult.PasswordIncorrect
@@ -15,11 +15,13 @@ object PlayerRepository {
   object Command {
     case class Register(username: Name, password: Password) extends Command
     case class Login(username: Name, password: Password) extends Command
+    case class UpdateBalance(username: Name, balance: Balance) extends Command
   }
 
   sealed trait Event
   object Event {
     case class Registered(username: Name, player: Player) extends Event
+    case class BalanceUpdated(username: Name, player: Player) extends Event
   }
 
   sealed trait RegistrationResult
@@ -92,6 +94,15 @@ class PlayerRepository extends PersistentActor {
       }
       replyTo ! loginResult
     }
+    case UpdateBalance(name, balance) => {
+      val replyTo = sender()
+      val player = storage.getPlayerByName(name)
+      player match {
+        case Some(player) => persist(Event.BalanceUpdated(name, player.copy(balance = balance)))(event => handleEvent(event, replyTo))
+        case None =>
+      }
+
+    }
 
 
   }
@@ -104,6 +115,7 @@ class PlayerRepository extends PersistentActor {
     // 6. Reply to the sender of the command about success
     event match {
       case Event.Registered(_,_) => replyTo ! RegistrationSuccessful
+      case Event.BalanceUpdated(_,_) => () // do nothing else
     }
     if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0)
       saveSnapshot(storage)

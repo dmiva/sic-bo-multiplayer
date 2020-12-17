@@ -2,7 +2,7 @@ package com.dmiva.sicbo.domain
 
 import com.dmiva.sicbo.domain.BetType._
 
-final case class Bet(amount: Option[Int], betType: BetType, win: Option[Int])
+final case class Bet(amount: Option[BigDecimal], betType: BetType, win: Option[BigDecimal])
 
 object Bet {
 

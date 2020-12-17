@@ -1,6 +1,7 @@
 package com.dmiva.sicbo
 import com.dmiva.sicbo.common.{ErrorMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs.outgoingMessageOps
+import com.dmiva.sicbo.domain.GamePhase
 import com.dmiva.sicbo.domain.Player.PlayerInfo
 
 /**
@@ -16,4 +17,5 @@ object Responses {
   val ErrorNotLoggedIn: String      = OutgoingMessage.Error(ErrorMessage.NotLoggedIn).toText
   val ErrorAlreadyLoggedIn: String  = OutgoingMessage.Error(ErrorMessage.AlreadyLoggedIn).toText
   val ErrorInvalidRequest: String       = OutgoingMessage.Error(ErrorMessage.InvalidRequest).toText
+  def GamePhaseChanged(newPhase: GamePhase): String = OutgoingMessage.GamePhaseChanged(newPhase).toText
 }

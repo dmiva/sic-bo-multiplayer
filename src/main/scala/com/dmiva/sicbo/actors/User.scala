@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.actors
 
 import akka.Done
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.dmiva.sicbo.actors.repository.PlayerRepository
 import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
@@ -60,7 +60,7 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
   }
 
   /**
-   * At this state player is in the game room
+   * At this state name is in the game room
    * @param wsHandle
    * @param player
    */

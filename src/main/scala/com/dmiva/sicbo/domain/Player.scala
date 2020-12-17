@@ -25,6 +25,8 @@ object Player { // TODO: Tidy up this mess
     def +(other: Balance): Balance = {
       copy(amount = amount + other.amount)
     }
+
+//    implicit def intToBigDecimal(int: Int): BigDecimal = BigDecimal(int)
   }
 
   case class Player(id: Long, username: Name, password: Password, userType: UserType, balance: Balance)

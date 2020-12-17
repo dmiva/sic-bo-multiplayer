@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import com.dmiva.sicbo.common.IncomingMessage.PlaceBet
 import com.dmiva.sicbo.domain.Player.{Balance, PlayerInfo, UserType}
-import com.dmiva.sicbo.domain.{Bet, BetType}
+import com.dmiva.sicbo.domain.{Bet, BetType, GamePhase}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -103,7 +103,7 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
 //        wsClient.expectMessage(Responses.RegistrationSuccessful)
 
         wsClient.sendMessage(Requests.Logout(testName1))
-        wsClient.expectMessage(Responses.ErrorNotLoggedIn)
+        wsClient.expectMessage(Responses.ErrorInvalidRequest)
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()
@@ -140,8 +140,9 @@ class WebServiceSpec extends AnyFunSuite with Matchers with ScalatestRouteTest {
         wsClient.sendMessage(Requests.Login(testName1, testPass1))
         wsClient.expectMessage(Responses.LoginSuccessful(player))
         Thread.sleep(4000)
+        wsClient.expectMessage(Responses.GamePhaseChanged(GamePhase.PlacingBets))
         wsClient.sendMessage(Requests.PlaceBet(testBets))
-                Requests.PlaceBet(testBets) shouldEqual "asd"
+//                Requests.PlaceBet(testBets) shouldEqual "asd"
         wsClient.expectMessage(Responses.BetAccepted)
 
         wsClient.sendCompletion()

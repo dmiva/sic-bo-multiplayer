@@ -3,7 +3,7 @@ package com.dmiva.sicbo.domain
 import BetType._
 /**
  * Payouts for a specific combination of dice.
- * Applies base payout multipliers to the player's bets according to game specification.
+ * Applies base payout multipliers to the name's bets according to game specification.
  * Does not filters out losing bets from supplied input data.
  * @param dice Combination of three dice
  */
@@ -47,7 +47,7 @@ final case class Paytable(dice: DiceOutcome) {
   private def getOddPayout: Int = if (dice.isOdd) oddPayout else 0
 
   def applyPayout(bet: Bet): Bet = {
-    val betAmount = bet.amount.getOrElse(0)
+    val betAmount: BigDecimal = bet.amount.getOrElse(BigDecimal(0))
     val multiplier: Int = bet.betType match {
       case Small        => getSmallPayout
       case Big          => getBigPayout
@@ -70,13 +70,13 @@ final case class Paytable(dice: DiceOutcome) {
     bets.map(bet => applyPayout(bet))
   }
 
-  def getWinning(bet: Bet): Int = {
+  def getWinning(bet: Bet): BigDecimal = {
     applyPayout(bet).win match {
       case Some(win) => win
       case None => 0
     }
   }
 
-  def getWinningTotal(bets: List[Bet]): Int = applyPayout(bets).map(bet => getWinning(bet)).sum
+  def getWinningTotal(bets: List[Bet]): BigDecimal = applyPayout(bets).map(bet => getWinning(bet)).sum
 }
 
