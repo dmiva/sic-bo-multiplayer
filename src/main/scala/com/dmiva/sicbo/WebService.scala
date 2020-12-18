@@ -16,7 +16,7 @@ import io.circe.jawn.decode
 import scala.concurrent.duration.DurationInt
 
 class WebService(implicit val system: ActorSystem) extends Directives {
-  val lobby = system.actorOf(Lobby.props())
+  val lobby = system.actorOf(Lobby.props(), "lobby")
 
   val authRoute: Route =
     get {
@@ -45,7 +45,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
 
     val sourceCompletionMatcher: PartialFunction[Any, CompletionStrategy] = {
       case Done =>
-        // complete stream immediately if we send it Status.Success
+        // complete stream immediately if we send it message Done
         CompletionStrategy.immediately
     }
 
@@ -66,7 +66,7 @@ class WebService(implicit val system: ActorSystem) extends Directives {
           newUserActor ! User.Connected(wsHandle)
           NotUsed
         }
-        .keepAlive(maxIdle = 10.seconds, () => TextMessage.Strict("Keep-alive"))
+        .keepAlive(maxIdle = 20.seconds, () => TextMessage.Strict("Keep-alive"))
 
     Flow.fromSinkAndSource(sink, source)
   }

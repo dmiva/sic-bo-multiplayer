@@ -10,6 +10,7 @@ import com.dmiva.sicbo.domain.{Balance, Name, Password, Player, UserType}
 
 object PlayerRepository {
 
+  /** All the commands that the PlayerRepository persistent actor supports. */
   sealed trait Command extends CborSerializable
   object Command {
     case class Register(username: Name, password: Password) extends Command
@@ -17,6 +18,7 @@ object PlayerRepository {
     case class UpdateBalance(username: Name, balance: Balance) extends Command
   }
 
+  /** All the events that the PlayerRepository supports. */
   sealed trait Event extends CborSerializable
   object Event {
     case class Registered(username: Name, player: Player) extends Event
@@ -50,7 +52,7 @@ class PlayerRepository extends PersistentActor with ActorLogging {
 
   override def persistenceId: String = PlayerRepository.persistenceId
 
-  var storage: PlayerStorage = PlayerStorage(Map.empty)
+  var storage: PlayerStorage = PlayerStorage(Map.empty) // Map[Name, Player]
 
   def updateStorage(event: Event): Unit = {
     storage = storage.updated(event)
@@ -59,6 +61,7 @@ class PlayerRepository extends PersistentActor with ActorLogging {
   override def receiveRecover: Receive = {
     case evt: Event => updateStorage(evt)
     case SnapshotOffer(_, snapshot: PlayerStorage) => storage = snapshot
+                                                      log.info(s"Snapshot recovered successfully.")
   }
 
   val snapshotInterval = 5

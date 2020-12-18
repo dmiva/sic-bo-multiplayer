@@ -102,7 +102,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
         case Left(e) => log.error("Something bad happened")
       }
       println(state.gameResult)
-
+      // TODO: Send only if Right(newState)
       state.gameResult.foreachEntry {
         case (player, result) =>
           users.find { case (_, session) => session.player.username == player } match {
