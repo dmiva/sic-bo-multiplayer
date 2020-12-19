@@ -46,9 +46,8 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
     case msg: PlayerRepository.LoginResult => msg match {
       case LoginResult.UserDoesNotExist    => wsHandle ! LoginFailed // TODO: Send reason
       case LoginResult.PasswordIncorrect   => wsHandle ! LoginFailed
-      case LoginResult.Successful(user)    => val session = PlayerSession(user, self)
-                                              // Automatic join to game because it's the only game room
-                                              lobby ! GameRoom.Join(self, session)
+      case LoginResult.Successful(user)    => // Automatic join to game because it's the only game room
+                                              lobby ! GameRoomPers.Command.Join(self, user)
                                               val playerInfo = PlayerInfo.from(user)
                                               wsHandle ! LoginSuccessful(playerInfo)
                                               context.become(loggedIn(wsHandle, user))
@@ -63,12 +62,12 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
   private def loggedIn(wsHandle: ActorRef, player: Player): Receive = {
     // When stream
     case Disconnected         => wsHandle ! Done
-                                 lobby ! GameRoom.Leave(self)
+                                 lobby ! GameRoomPers.Command.Leave(self, player)
                                  context.stop(self)
     // Messages
     case msg: IncomingMessage => msg match {
-      case msg: PlaceBet      => lobby ! GameRoom.PlaceBet(player, msg.bets)
-      case Logout(_)          => lobby ! GameRoom.Leave(self)
+      case msg: PlaceBet      => lobby ! GameRoomPers.Command.PlaceBet(self, player, msg.bets)
+      case Logout(_)          => lobby ! GameRoomPers.Command.Leave(self, player)
                                  wsHandle ! LoggedOut
                                  context.become(connected(wsHandle))
       case Login(_,_)         => wsHandle ! Error(ErrorMessage.AlreadyLoggedIn)

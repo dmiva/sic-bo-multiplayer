@@ -5,14 +5,14 @@ import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, Time
 import com.dmiva.sicbo.actors.repository.PlayerRepository
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, Error, GamePhaseChanged}
 import com.dmiva.sicbo.common.{BetRejectReason, ErrorMessage, OutgoingMessage}
-import com.dmiva.sicbo.domain.{Balance, Bet, GamePhase, GameState, Player, PlayerSession}
+import com.dmiva.sicbo.domain.{Balance, Bet, GamePhase, GameState, Player}
 
 import scala.concurrent.duration.DurationInt
 
 object GameRoom {
 
-  case class Join(ref: ActorRef, session: PlayerSession)
-  case class Leave(ref: ActorRef)
+  case class Join(ref: ActorRef, player: Player)
+  case class Leave(ref: ActorRef, player: Player)
   case class PlaceBet(player: Player, bets: List[Bet])
 
   def props() = Props(new GameRoom)
@@ -26,7 +26,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
   var state: GameState = GameState.initGame
 
   // Supervision strategy for the dice roller actor
-  override val supervisorStrategy =
+  override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 4.seconds) {
       case _: IllegalStateException    => Restart
       case _: Exception                => Escalate
@@ -34,32 +34,32 @@ class GameRoom extends Actor with Timers with ActorLogging {
 
   override def receive: Receive = playing(Map())
 
-  private def playing(users: Map[ActorRef, PlayerSession]): Receive = {
+  def playing(users: Map[ActorRef, Player]): Receive = {
 
-    case Join(ref, session) =>
-      log.info(s"${session.player.username} joined the game.")
+    case Join(ref, player) =>
+      log.info(s"${player.username} joined the game.")
       if (state.phase == GamePhase.Idle) timers.startSingleTimer("Starting game...", GamePhase.PlacingBets, 3.seconds)
-      state = state.addPlayer(session.player)
-      context.become(playing(users + (ref -> session)))
+      // persist
+//      persist(Event.PlayerJoined(session.player))(event => handleEvent(event, replyTo))
+      state = state.addPlayer(player)
+      context.become(playing(users + (ref -> player)))
 
-    case Leave(ref) =>
-      users.get(ref) match {
-        case None => ref ! Error(ErrorMessage.NotLoggedIn)
-        case Some(session) =>
-          log.info(s"${session.player.username} left the game.")
-          state = state.removePlayer(session.player)
-          saveBalanceToRepository(session)
-          context.become(playing(users - ref))
-      }
+    case Leave(ref, player) =>
+      log.info(s"${player.username} left the game.")
+      // persist
+      state = state.removePlayer(player)
+      saveBalanceToRepository(player)
+      context.become(playing(users - ref))
 
     case PlaceBet(player, bets) =>
       if (state.phase == GamePhase.PlacingBets && users.contains(sender())) {
         state.placeBet(player.username, bets) match {
+          case Left(e) => sender() ! BetRejected(BetRejectReason.NotEnoughBalance)
           case Right(newState) =>
+            // persist
             state = newState
             sender() ! BetAccepted
             bets.map(bet => println(s"${player.username} placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
-          case Left(e) => sender() ! BetRejected(BetRejectReason.NotEnoughBalance)
         }
       }
       else
@@ -69,12 +69,14 @@ class GameRoom extends Actor with Timers with ActorLogging {
 
     case DiceRoller.DiceResult(dice) =>
       log.info(s"Received dice result $dice")
+      // persist
       state.applyDiceOutcome(dice) match {
         case Right(newState) => state = newState
         case Left(e) => log.error("Fatal error")
       }
 
     case GamePhase.Idle =>
+      // persist
       state = GameState.initGame
       println("Waiting for players...")
 
@@ -86,6 +88,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
       timers.startSingleTimer("Time before rolling dice", GamePhase.RollingDice, 15.seconds)
 
     case GamePhase.RollingDice =>
+      // persist
       state = state.setGamePhase(GamePhase.RollingDice)
       broadcast(users,GamePhaseChanged(state.phase))
 
@@ -94,6 +97,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
       timers.startSingleTimer("Time before making payouts", GamePhase.MakePayouts, 5.seconds)
 
     case GamePhase.MakePayouts =>
+      // persist
       state = state.setGamePhase(GamePhase.MakePayouts)
       broadcast(users,GamePhaseChanged(state.phase))
       println("Making payouts...")
@@ -104,15 +108,14 @@ class GameRoom extends Actor with Timers with ActorLogging {
       println(state.gameResult)
       // TODO: Send only if Right(newState)
       state.gameResult.foreachEntry {
-        case (player, result) =>
-          users.find { case (_, session) => session.player.username == player } match {
-            case Some((ref, session)) =>
-              ref ! result
+        case (playerName, result) =>
+          users.find { case (_, player) => player.username == playerName } match {
+            case Some((ref, session)) => ref ! result
             case None =>
           }
       }
-      users foreachEntry { case (ref, session) =>
-        saveBalanceToRepository(session)
+      users foreachEntry { case (ref, player) =>
+        saveBalanceToRepository(player)
       }
 
       timers.startSingleTimer("Time before new round", GamePhase.GameEnded, 5.seconds)
@@ -125,13 +128,12 @@ class GameRoom extends Actor with Timers with ActorLogging {
         self ! GamePhase.Idle
   }
 
-  def saveBalanceToRepository(session: PlayerSession): Unit = {
-    val balance = state.getPlayerBalance(session.player.username)
-    context.parent ! PlayerRepository.Command.UpdateBalance(session.player.username, Balance(balance))
-
+  def saveBalanceToRepository(player: Player): Unit = {
+    val balance = state.getPlayerBalance(player.username)
+    context.parent ! PlayerRepository.Command.UpdateBalance(player.username, Balance(balance))
   }
 
-  def broadcast(players: Map[ActorRef, PlayerSession], msg: OutgoingMessage): Unit = {
+  def broadcast(players: Map[ActorRef, Player], msg: OutgoingMessage): Unit = {
     players.foreach { case (ref, _) => ref ! msg}
   }
 

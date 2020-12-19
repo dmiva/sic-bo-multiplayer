@@ -1,5 +1,6 @@
 package com.dmiva.sicbo.domain
 
+import com.dmiva.sicbo.actors.repository.CborSerializable
 import com.dmiva.sicbo.common.BetRejectReason
 import com.dmiva.sicbo.common.OutgoingMessage.GameResult
 
@@ -14,7 +15,7 @@ object GameState {
     gameResult = Map.empty
   )
 }
-final case class PlayerState(name: Name, balance: Balance, quit: Boolean)
+final case class PlayerState(name: Name, balance: Balance, quit: Boolean) extends CborSerializable
 
 final case class GameState(
                             phase: GamePhase,
@@ -22,7 +23,7 @@ final case class GameState(
                             playersBets: Map[Name, List[Bet]],
                             dice: Option[DiceOutcome],
                             gameResult: Map[Name, GameResult]
-                          ) {
+                          ) extends CborSerializable {
 
   /**
    * Starts new game session. All bets and payout are cleaned.
