@@ -40,6 +40,8 @@ sealed trait BetRejectReason
 object BetRejectReason {
   val NotEnoughBalance = "Not enough balance"
   val TimeExpired = "Wait for the next round"
+  val BetAmountNotPositive = "Bet amount not positive"
+  val MustBeAtLeastOneBet = "Must be at least one bet"
   def PlayerNotInGame(name: String) = s"Player $name is not in game"
 }
 

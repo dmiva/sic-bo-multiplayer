@@ -52,23 +52,26 @@ final case class GameState(
     }
   }
 
-//  /** Removes all players, that are flagged as quit */
-//  def removeLeftPlayers: GameState = {
-//    this.copy(players = players.filterNot{ case (_, playerState) => playerState.quit})
-//  }
-
   /** If player is in game and has enough balance, then bet is accepted */
   def placeBet(name: Name, bets: List[Bet]): Either[String, GameState] = {
     phase match {
       case GamePhase.PlacingBets =>
+        val betListEmpty = bets.isEmpty // TODO: Refactor this validation
         val pendingBetAmount = bets.map(_.amount.getOrElse(BigDecimal(0))).sum
+        val invalidBetAmount = bets.exists(b => b.amount <= Some(0) || b.amount.isEmpty)
         val currentBalance = getPlayerBalance(name)
-        if (currentBalance >= pendingBetAmount)
-          Right(this.copy(
-            players = players + (name -> PlayerState(name, Balance(currentBalance - pendingBetAmount), quit = false)),
-            playersBets = playersBets + (name -> playersBets.getOrElse(name, List.empty).concat(bets))))
+        if (betListEmpty)
+          Left(BetRejectReason.MustBeAtLeastOneBet)
         else
-          Left(BetRejectReason.NotEnoughBalance)
+          if (invalidBetAmount)
+            Left(BetRejectReason.BetAmountNotPositive)
+          else
+            if (currentBalance >= pendingBetAmount)
+              Right(this.copy(
+                players = players + (name -> PlayerState(name, Balance(currentBalance - pendingBetAmount), quit = false)),
+                playersBets = playersBets + (name -> playersBets.getOrElse(name, List.empty).concat(bets))))
+            else
+              Left(BetRejectReason.NotEnoughBalance)
       case _ => Left(BetRejectReason.TimeExpired)
     }
   }

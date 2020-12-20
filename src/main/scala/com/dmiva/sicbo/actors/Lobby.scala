@@ -11,7 +11,7 @@ object Lobby {
 
 // a.k.a API Gateway
 class Lobby extends Actor {
-  private val gameRoom = context.actorOf(GameRoomPers.props(), "game")
+  private val gameRoom = context.actorOf(GameRoom.props(), "game")
   private val playerRepository = context.actorOf(PlayerRepository.props(), "repository")
 
   override val supervisorStrategy: OneForOneStrategy =
@@ -25,9 +25,9 @@ class Lobby extends Actor {
     case msg: PlayerRepository.Command.Login          => playerRepository forward msg
     case msg: PlayerRepository.Command.UpdateBalance  => playerRepository forward msg
 
-    case msg: GameRoomPers.Command.PlaceBet                       => gameRoom forward msg
-    case msg: GameRoomPers.Command.Join                           => gameRoom forward msg
-    case msg: GameRoomPers.Command.Leave                          => gameRoom forward msg
+    case msg: GameRoom.Command.PlaceBet               => gameRoom forward msg
+    case msg: GameRoom.Command.Join                   => gameRoom forward msg
+    case msg: GameRoom.Command.Leave                  => gameRoom forward msg
   }
 }
 
