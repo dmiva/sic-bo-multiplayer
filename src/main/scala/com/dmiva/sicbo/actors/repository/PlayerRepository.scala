@@ -60,8 +60,8 @@ class PlayerRepository extends PersistentActor with ActorLogging {
 
   override def receiveRecover: Receive = {
     case evt: Event => updateStorage(evt)
-    case SnapshotOffer(_, snapshot: PlayerStorage) => storage = snapshot
-                                                      log.info(s"Snapshot recovered successfully.")
+    case SnapshotOffer(metadata, snapshot: PlayerStorage) => storage = snapshot
+      log.info(s"Snapshot ${metadata.persistenceId} seqId=${metadata.sequenceNr} recovered successfully.")
   }
 
   val snapshotInterval = 5

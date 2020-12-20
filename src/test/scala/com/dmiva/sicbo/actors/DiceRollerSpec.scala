@@ -21,7 +21,7 @@ class DiceRollerSpec
 
   "DiceRoller actor" should {
 
-    "return a dice result in normal conditions" in {
+    "return a dice gameResult in normal conditions" in {
       val probe = TestProbe()
       val diceRoller = probe.childActorOf(DiceRoller.props())
 
@@ -29,7 +29,7 @@ class DiceRollerSpec
       probe.expectMsgType[DiceRoller.DiceResult]
     }
 
-    "return a dice result if True RNG is returning back unexpected result" in {
+    "return a dice gameResult if True RNG is returning back unexpected gameResult" in {
       val httpUrl = "https://www.random.org/integers/?num=3&min=1&max=6&col=1&base=10&format=plain&rnd=new"
       val probe = TestProbe()
       val diceRoller = system.actorOf(Props(new DiceRoller() {
@@ -42,7 +42,7 @@ class DiceRollerSpec
       probe.expectMsgType[DiceRoller.DiceResult]
     }
 
-    "return a dice result if True RNG HTTP provider is an unknown host" in {
+    "return a dice gameResult if True RNG HTTP provider is an unknown host" in {
       val httpUrl = "https://www.random.org123"
       val probe = TestProbe()
       val diceRoller = system.actorOf(Props(new DiceRoller() {

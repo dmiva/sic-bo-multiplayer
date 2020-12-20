@@ -76,7 +76,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         val doubleValue = if (a == b) a
         else if (a == c) a
         else if (b == c) b else 0
-        println(s"Bet: Double($bet) , Dice: $a $b $c , result = ${if (doubleValue == bet) "won" else "lost"}")
+        println(s"Bet: Double($bet) , Dice: $a $b $c , gameResult = ${if (doubleValue == bet) "won" else "lost"}")
         DiceOutcome(a,b,c).hasDouble(doubleValue) shouldEqual result
         Bet.isWinningBetType(BetType.Double(0), DiceOutcome(a,b,c)) shouldEqual false
         Bet.isWinningBetType(BetType.Double(bet), DiceOutcome(a,b,c)) shouldEqual (doubleValue == bet)

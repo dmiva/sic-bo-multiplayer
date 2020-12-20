@@ -25,12 +25,12 @@ object DiceRoller {
 }
 
 /**
- * Actor that provides dice result using true or pseudo RNG.
+ * Actor that provides dice gameResult using true or pseudo RNG.
  * True RNG sends request to Random [dot] org and
- * in case if result is as expected, it is used in the game.
+ * in case if gameResult is as expected, it is used in the game.
  *
  * If by any reason True RNG fails, then
- * dice result is obtained using built-in pseudo RNG.
+ * dice gameResult is obtained using built-in pseudo RNG.
  *
  * If by any reason Pseudo RNG fails, then [[IllegalStateException]] exception is thrown.
  */
@@ -56,8 +56,8 @@ class DiceRoller extends Actor with ActorLogging {
       case Some(dice) =>
         replyTo ! DiceResult(dice)
       case None =>
-        log.error(s"Pseudo RNG result failed to parse: a=$a, b=$b, c=$c")
-        throw new IllegalStateException("Pseudo RNG result failed to parse")
+        log.error(s"Pseudo RNG gameResult failed to parse: a=$a, b=$b, c=$c")
+        throw new IllegalStateException("Pseudo RNG gameResult failed to parse")
     }
   }
 
@@ -82,11 +82,11 @@ class DiceRoller extends Actor with ActorLogging {
               DiceOutcome.from(a, b, c) match {
                 case Some(dice) => replyTo ! DiceResult(dice)
                 case None =>
-                  log.error(s"True RNG result failed to parse: a=$a, b=$b, c=$c, url=$httpUrl")
+                  log.error(s"True RNG gameResult failed to parse: a=$a, b=$b, c=$c, url=$httpUrl")
                   getPseudoRNGDiceResult(replyTo)
               }
             case _ =>
-              log.error(s"True RNG returned unexpected result: body=${body.utf8String}, url=$httpUrl")
+              log.error(s"True RNG returned unexpected gameResult: body=${body.utf8String}, url=$httpUrl")
               getPseudoRNGDiceResult(replyTo)
           }
         }

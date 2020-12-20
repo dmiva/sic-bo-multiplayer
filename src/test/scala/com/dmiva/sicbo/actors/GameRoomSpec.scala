@@ -1,16 +1,11 @@
 package com.dmiva.sicbo.actors
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import com.dmiva.sicbo.common.OutgoingMessage.GamePhaseChanged
-import com.dmiva.sicbo.domain
-import com.dmiva.sicbo.domain.{Balance, GamePhase, Player, PlayerSession, UserType}
+import akka.actor.{ActorSystem}
+import akka.testkit.{ImplicitSender, TestKit}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
 
 class GameRoomSpec extends TestKit(ActorSystem("GameRoomSpec"))
   with ImplicitSender

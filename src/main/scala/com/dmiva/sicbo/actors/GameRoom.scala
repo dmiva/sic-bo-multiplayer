@@ -9,6 +9,7 @@ import com.dmiva.sicbo.domain.{Balance, Bet, GamePhase, GameState, Player}
 
 import scala.concurrent.duration.DurationInt
 
+@deprecated("Replaced with Persistent actor")
 object GameRoom {
 
   case class Join(ref: ActorRef, player: Player)
@@ -68,7 +69,7 @@ class GameRoom extends Actor with Timers with ActorLogging {
 
 
     case DiceRoller.DiceResult(dice) =>
-      log.info(s"Received dice result $dice")
+      log.info(s"Received dice gameResult $dice")
       // persist
       state.applyDiceOutcome(dice) match {
         case Right(newState) => state = newState

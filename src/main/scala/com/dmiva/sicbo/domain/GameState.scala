@@ -95,6 +95,7 @@ final case class GameState(
               val resultWithoutBets = GameResult(
                 diceOutcome = diceOutcome,
                 winningBetTypes = winningBetTypes,
+                totalBet = BigDecimal(0),
                 totalWin = BigDecimal(0),
                 balance  = playerState.balance,
                 username = name
@@ -102,9 +103,10 @@ final case class GameState(
               playersBets.get(name) match {
                 case None => name -> resultWithoutBets // player did not made bets
                 case Some(bets) =>
-//                  val totalPlacedBetAmount = bets.map(_.amount.getOrElse(BigDecimal(0))).sum
+                  val totalBetAmount = bets.map(_.amount.getOrElse(BigDecimal(0))).sum
                   val totalWinAmount = paytable.getWinningTotal(bets)
                   name -> resultWithoutBets.copy(
+                    totalBet = totalBetAmount,
                     totalWin = totalWinAmount,
                     balance = Balance(playerState.balance.amount + totalWinAmount)
                   )
@@ -117,8 +119,8 @@ final case class GameState(
     }
   }
 
-  def updatePlayerState(result: Map[Name, GameResult]): Map[Name, PlayerState] = {
-    result map { case (name, result) =>
+  def updatePlayerState(gameResult: Map[Name, GameResult]): Map[Name, PlayerState] = {
+    gameResult map { case (name, result) =>
       players.get(name) match {
         case Some(playerState) => name -> playerState.copy(balance = result.balance)
         case None => name -> PlayerState(name = name, balance = Balance(0), quit = false)

@@ -1,15 +1,14 @@
 package com.dmiva.sicbo.actors
 
 import akka.actor.SupervisorStrategy.{Escalate, Restart}
-import akka.actor.{ActorLogging, ActorRef, Kill, OneForOneStrategy, Props, Timers}
+import akka.actor.{ActorLogging, ActorRef, OneForOneStrategy, Props, Timers}
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import com.dmiva.sicbo.actors.GameRoomPers.Event.GotDiceResult
 import com.dmiva.sicbo.actors.repository.{CborSerializable, PlayerRepository}
 import com.dmiva.sicbo.common.OutgoingMessage
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, GamePhaseChanged}
 import com.dmiva.sicbo.domain.{Balance, Bet, DiceOutcome, GamePhase, GameState, Player}
-
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 object GameRoomPers {
 
@@ -20,6 +19,7 @@ object GameRoomPers {
     case class PlaceBet(ref: ActorRef, player: Player, bets: List[Bet]) extends Command
   }
 
+  /** Persisted events */
   sealed trait Event extends CborSerializable
   object Event {
     case class PlayerJoined(player: Player) extends Event
@@ -29,9 +29,19 @@ object GameRoomPers {
     case class GamePhaseChanged(newPhase: GamePhase) extends Event
   }
 
+  /** Timers for game phase change scheduling */
+  sealed abstract case class TimerSetting private (nextPhase: GamePhase, duration: FiniteDuration)
+  object TimerSetting {
+    val placingBets: TimerSetting = TimerSetting(nextPhase = GamePhase.RollingDice, duration = 15.seconds)
+    val rollingDice: TimerSetting = TimerSetting(nextPhase = GamePhase.MakePayouts, duration = 5.seconds)
+    val makePayouts: TimerSetting = TimerSetting(nextPhase = GamePhase.GameEnded, duration = 5.seconds)
+
+    private def apply(nextPhase: GamePhase, duration: FiniteDuration): TimerSetting =
+      new TimerSetting(nextPhase, duration){}
+  }
+
   def props() = Props(new GameRoomPers())
 }
-
 
 class GameRoomPers extends Timers with PersistentActor with ActorLogging {
   import GameRoomPers._
@@ -39,7 +49,6 @@ class GameRoomPers extends Timers with PersistentActor with ActorLogging {
   val snapshotInterval = 1
 
   val diceRoller: ActorRef = context.actorOf(DiceRoller.props())
-  var users: Map[ActorRef, Player] = Map()
 
   var state: GameState = GameState.initGame
 
@@ -50,10 +59,145 @@ class GameRoomPers extends Timers with PersistentActor with ActorLogging {
       case _: Exception                => Escalate
     }
 
+  /** Schedules timer that sends message to itself with next game phase */
+  private def startTimer(timer: TimerSetting): Unit = {
+    timers.startSingleTimer("timerKey", timer.nextPhase, timer.duration)
+  }
+
   override def receiveRecover: Receive = {
     case evt: Event => updateState(evt)
     case SnapshotOffer(metadata, snapshot: GameState) => state = snapshot
-      log.info(s"Game snapshot ${metadata.sequenceNr} recovered successfully.")
+      log.info(s"Snapshot ${metadata.persistenceId} seqId=${metadata.sequenceNr} recovered successfully.")
+      // After recovery timer needs to be scheduled again
+      snapshot.phase match {
+        case GamePhase.PlacingBets =>
+          startTimer(TimerSetting.placingBets)
+          println(s"Game recovered. You have ${TimerSetting.placingBets.duration} seconds to place bets...")
+
+        case GamePhase.RollingDice =>
+          startTimer(TimerSetting.rollingDice)
+          if (snapshot.dice.isEmpty) {
+            diceRoller ! DiceRoller.RollDice
+            println("Game recovered. Dice are rolling...")
+          }
+          else
+            println(s"Game recovered. Dice result is ${snapshot.dice}")
+
+        case GamePhase.MakePayouts =>
+          startTimer(TimerSetting.makePayouts)
+          println("Game recovered. Making payouts...")
+
+        case GamePhase.Idle        => println("Game recovered. Waiting for players...")
+        case _                     => // do nothing
+      }
+  }
+
+  override def receiveCommand: Receive = handleCommand(Map.empty)
+
+  def handleCommand(users: Map[ActorRef, Player]): Receive = {
+    case SaveSnapshotSuccess(metadata) =>
+//      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
+
+    case SaveSnapshotFailure(metadata, reason) =>
+      log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
+
+    case Command.Join(ref, player) =>
+      persist(Event.PlayerJoined(player))(event => handleEvent(event, users, ref))
+//      println(s"${player.username} joined the game.")
+//      if (state.phase == GamePhase.Idle) self ! GamePhase.PlacingBets
+//      context.become(handleCommand(users + (ref -> player)))
+
+    case Command.Leave(ref, player) =>
+      persist(Event.PlayerLeft(player))(event => handleEvent(event, users, ref))
+//      println(s"${player.username} left the game.")
+//      context.become(handleCommand(users - ref))
+
+    case Command.PlaceBet(ref, player, bets) =>
+      state.placeBet(player.username, bets) match {
+        case Left(e) => ref ! BetRejected(e)
+        case Right(_) => persist(Event.BetPlaced(player, bets))(event => handleEvent(event, users, ref))
+      }
+
+    case DiceRoller.DiceResult(dice) => persist(Event.GotDiceResult(dice))(event => handleEvent(event, users, sender()))
+
+    case GamePhase.Idle         => persist(Event.GamePhaseChanged(GamePhase.Idle))(event => handleEvent(event, users, sender()))
+    case GamePhase.PlacingBets  => persist(Event.GamePhaseChanged(GamePhase.PlacingBets))(event => handleEvent(event, users, sender()))
+    case GamePhase.RollingDice  => persist(Event.GamePhaseChanged(GamePhase.RollingDice))(event => handleEvent(event, users, sender()))
+    case GamePhase.MakePayouts  => persist(Event.GamePhaseChanged(GamePhase.MakePayouts))(event => handleEvent(event, users, sender()))
+    case GamePhase.GameEnded    => persist(Event.GamePhaseChanged(GamePhase.GameEnded))(event => handleEvent(event, users, sender()))
+  }
+
+  def handleEvent(event: Event, users: Map[ActorRef, Player], replyTo: ActorRef): Unit = {
+    updateState(event)
+    context.system.eventStream.publish(event)
+
+    // After event is successfully persisted and state mutated, perform remaining actions
+    event match {
+      case Event.PlayerJoined(player) =>
+        println(s"${player.username} joined the game.")
+        if (state.phase == GamePhase.Idle) self ! GamePhase.PlacingBets
+        context.become(handleCommand(users + (replyTo -> player)))
+
+      case Event.PlayerLeft(player) =>
+        println(s"${player.username} left the game.")
+        context.become(handleCommand(users - replyTo))
+        saveBalanceToRepository(player)
+
+      case Event.BetPlaced(player, bets) =>
+        replyTo ! BetAccepted
+        bets.foreach(bet => println(s"${player.username} placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
+
+      case GotDiceResult(dice) =>
+        println(s"Received dice result: $dice")
+
+      case Event.GamePhaseChanged(newPhase) =>
+        newPhase match {
+          case GamePhase.Idle =>
+            println("Waiting for players...")
+
+          case GamePhase.PlacingBets =>
+            startTimer(TimerSetting.placingBets)
+            broadcast(users, GamePhaseChanged(state.phase))
+            println(s"New game started. You have ${TimerSetting.placingBets.duration} seconds to place bets...")
+
+          case GamePhase.RollingDice =>
+            startTimer(TimerSetting.rollingDice)
+            broadcast(users,GamePhaseChanged(state.phase))
+            println("Dice are rolling...")
+            if (state.dice.isEmpty) diceRoller ! DiceRoller.RollDice
+
+          case GamePhase.MakePayouts =>
+            startTimer(TimerSetting.makePayouts)
+            broadcast(users,GamePhaseChanged(state.phase))
+            println("Making payouts...")
+            state.calculateResults match {
+              case Left(e) => log.error(e)
+              case Right(newState) =>
+                state = newState
+                println(state.gameResult)
+                state.gameResult.foreachEntry {
+                  case (playerName, result) =>
+                    users.find { case (_, player) => player.username == playerName } match {
+                      case Some((ref, player)) => ref ! result
+                      case None =>
+                    }
+                }
+                users foreachEntry { case (ref, player) =>
+                  saveBalanceToRepository(player)
+                }
+            }
+
+          case GamePhase.GameEnded =>
+            println("Game ended.")
+            if (users.nonEmpty)
+              self ! GamePhase.PlacingBets
+            else
+              self ! GamePhase.Idle
+        }
+    }
+
+    if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0)
+      saveSnapshot(state)
   }
 
   def updateState(event: Event): Unit = {
@@ -62,13 +206,13 @@ class GameRoomPers extends Timers with PersistentActor with ActorLogging {
       case Event.PlayerLeft(player)       => state = state.removePlayer(player)
       case Event.BetPlaced(player, bets)  =>
         state.placeBet(player.username, bets) match {
-          case Left(e)                => log.error(e)
+          case Left(e)                    => log.error(e)
           case Right(newState)            => state = newState
         }
       case GotDiceResult(dice) =>
         state.applyDiceOutcome(dice) match {
-          case Left(e) => log.error(e)
-          case Right(newState) => state = newState
+          case Left(e)              => log.error(e)
+          case Right(newState)      => state = newState
         }
       case Event.GamePhaseChanged(newPhase) => newPhase match {
         case GamePhase.Idle         => state = GameState.initGame
@@ -85,110 +229,6 @@ class GameRoomPers extends Timers with PersistentActor with ActorLogging {
     }
   }
 
-  def handleEvent(event: Event, replyTo: ActorRef): Unit = {
-    updateState(event)
-    context.system.eventStream.publish(event)
-
-        event match {
-          case Event.PlayerJoined(player) => // no action here
-          case Event.PlayerLeft(player) => saveBalanceToRepository(player)
-          case Event.BetPlaced(player, bets) =>
-            replyTo ! BetAccepted
-            bets.foreach(bet => println(s"${player.username} placed bet with type = ${bet.betType} and amount = ${bet.amount}"))
-          case GotDiceResult(dice) => // no action here
-          case Event.GamePhaseChanged(newPhase) =>
-            newPhase match {
-              case GamePhase.Idle => println("Waiting for players...")
-              case GamePhase.PlacingBets =>
-                broadcast(users, GamePhaseChanged(state.phase))
-                println("New game started. You have 15 seconds to place bets...")
-                timers.startSingleTimer("Time before rolling dice", GamePhase.RollingDice, 15.seconds)
-
-              case GamePhase.RollingDice =>
-                broadcast(users,GamePhaseChanged(state.phase))
-                println("Dice are rolling...")
-                diceRoller ! DiceRoller.RollDice
-                timers.startSingleTimer("Time before making payouts", GamePhase.MakePayouts, 5.seconds)
-
-              case GamePhase.MakePayouts =>
-                broadcast(users,GamePhaseChanged(state.phase))
-                println("Making payouts...")
-                state.calculateResults match {
-                  case Right(newState) => state = newState
-                  case Left(e) => log.error("Something bad happened")
-                }
-                println(state.gameResult)
-                // TODO: Send only if Right(newState)
-                state.gameResult.foreachEntry {
-                  case (playerName, result) =>
-                    users.find { case (_, player) => player.username == playerName } match {
-                      case Some((ref, session)) => ref ! result
-                      case None =>
-                    }
-                }
-                users foreachEntry { case (ref, player) =>
-                  saveBalanceToRepository(player)
-                }
-
-                timers.startSingleTimer("Time before new round", GamePhase.GameEnded, 5.seconds)
-
-              case GamePhase.GameEnded =>
-                println("Game ended.")
-                self ! Kill
-                if (users.nonEmpty)
-                  self ! GamePhase.PlacingBets
-                else
-                  self ! GamePhase.Idle
-            }
-        }
-
-    if (lastSequenceNr % snapshotInterval == 0 && lastSequenceNr != 0)
-      saveSnapshot(state)
-  }
-
-
-
-//  override def receiveCommand: Receive = commandHandler(Map())
-
-//  def commandHandler(users: Map[ActorRef, Player]): Receive = {
-  override def receiveCommand: Receive = {
-    case SaveSnapshotSuccess(metadata)         =>
-      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
-    case SaveSnapshotFailure(metadata, reason) =>
-      log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
-    case Command.Join(ref, player) =>
-      persist(Event.PlayerJoined(player))(event => handleEvent(event, ref))
-      log.info(s"${player.username} joined the game.")
-      if (state.phase == GamePhase.Idle) timers.startSingleTimer("Starting game...", GamePhase.PlacingBets, 3.seconds)
-
-//      context.become(commandHandler(users + (ref -> player)))
-      users = users + (ref -> player)
-
-    case Command.Leave(ref, player) =>
-      log.info(s"${player.username} left the game.")
-      persist(Event.PlayerLeft(player))(event => handleEvent(event, ref))
-//      context.become(commandHandler(users - ref))
-      users = users - ref
-
-    case Command.PlaceBet(ref, player, bets) =>
-//      if (state.phase == GamePhase.PlacingBets && users.contains(sender())) {
-        state.placeBet(player.username, bets) match {
-          case Left(e) => ref ! BetRejected(e)
-          case Right(newState) =>
-            persist(Event.BetPlaced(player, bets))(event => handleEvent(event, ref))
-        }
-//      }
-
-    case DiceRoller.DiceResult(dice) => persist(Event.GotDiceResult(dice))(event => handleEvent(event, sender()))
-
-    case GamePhase.Idle         => persist(Event.GamePhaseChanged(GamePhase.Idle))(event => handleEvent(event, sender()))
-    case GamePhase.PlacingBets  => persist(Event.GamePhaseChanged(GamePhase.PlacingBets))(event => handleEvent(event, sender()))
-    case GamePhase.RollingDice  => persist(Event.GamePhaseChanged(GamePhase.RollingDice))(event => handleEvent(event, sender()))
-    case GamePhase.MakePayouts  => persist(Event.GamePhaseChanged(GamePhase.MakePayouts))(event => handleEvent(event, sender()))
-    case GamePhase.GameEnded    => persist(Event.GamePhaseChanged(GamePhase.GameEnded))(event => handleEvent(event, sender()))
-  }
-
-
   def saveBalanceToRepository(player: Player): Unit = {
     val balance = state.getPlayerBalance(player.username)
     context.parent ! PlayerRepository.Command.UpdateBalance(player.username, Balance(balance))
@@ -197,4 +237,5 @@ class GameRoomPers extends Timers with PersistentActor with ActorLogging {
   def broadcast(players: Map[ActorRef, Player], msg: OutgoingMessage): Unit = {
     players.foreach { case (ref, _) => ref ! msg}
   }
+
 }

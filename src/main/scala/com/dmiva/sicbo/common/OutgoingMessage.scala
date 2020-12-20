@@ -18,15 +18,22 @@ object OutgoingMessage {
   case class GameResult(
                          diceOutcome: DiceOutcome,
                          winningBetTypes: List[BetType],
+                         totalBet: BigDecimal,
                          totalWin: BigDecimal,
                          balance: Balance,
                          username: Name
-  ) extends OutgoingMessage
+  ) extends OutgoingMessage {
+    override def toString: String = {
+        s"Dice outcome: ${diceOutcome.a} ${diceOutcome.b} ${diceOutcome.c} " +
+        s"TOTAL ${diceOutcome.a + diceOutcome.b + diceOutcome.c}. " +
+        s"Winning bets: $winningBetTypes. " +
+        s"$username bet amount $totalBet, won $totalWin. New balance: ${balance.amount}"
+    }
+  }
 
   case class GamePhaseChanged(newPhase: GamePhase) extends OutgoingMessage
 
-
-  implicit val customPrinter = Printer.spaces2.copy(dropNullValues = true)
+  implicit val customPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 }
 
 sealed trait BetRejectReason

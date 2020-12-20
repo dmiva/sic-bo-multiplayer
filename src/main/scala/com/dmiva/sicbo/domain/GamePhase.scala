@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.annotation.{JsonDeserialize, JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
-import java.time.Instant
-
 @JsonSerialize(using = classOf[GamePhaseJsonSerializer])
 @JsonDeserialize(using = classOf[GamePhaseJsonDeserializer])
 sealed trait GamePhase
