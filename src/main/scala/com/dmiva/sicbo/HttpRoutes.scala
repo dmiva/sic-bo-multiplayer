@@ -1,27 +1,48 @@
 package com.dmiva.sicbo
 
 import akka.{Done, NotUsed}
-import akka.actor.{ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import com.dmiva.sicbo.actors.{Lobby, User}
+import com.dmiva.sicbo.common.IncomingMessage.Register
 import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.OutgoingMessage.Error
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
+import com.dmiva.sicbo.repository.PlayerRepository
+import com.dmiva.sicbo.service.PlayerService
 import io.circe.jawn.decode
+import io.circe.generic.auto._
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
 
-class WebService(implicit val system: ActorSystem) extends Directives {
-  val lobby = system.actorOf(Lobby.props(), "lobby")
+class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: ActorSystem, val executionContext: ExecutionContext) extends Directives {
 
-  val authRoute: Route =
+
+  val helloRoute: Route =
     get {
       pathSingleSlash {
         complete("Welcome to SicBo server")
+      }
+    }
+
+  val registerRoute: Route =
+
+    (post & path("register")) {
+      entity(as[Register]) { registerRequest =>
+        complete(service.register(registerRequest))
+//        inserted onComplete {
+//          case Success(value) => complete(StatusCodes.Created)
+//          case Failure(exception) => complete(StatusCodes.InternalServerError)
+//        }
+
       }
     }
 
@@ -78,6 +99,6 @@ class WebService(implicit val system: ActorSystem) extends Directives {
       }
     }
 
-  val routes = authRoute ~ webSocketRoute
+  val routes = helloRoute ~ webSocketRoute ~ registerRoute
 
 }

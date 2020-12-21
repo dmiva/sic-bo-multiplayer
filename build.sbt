@@ -19,11 +19,13 @@ val scalaTestVersion = "3.2.3"
 val scalaTestPlusVersion = "3.1.0.0-RC2"
 val scalaCheckVersion = "1.15.1"
 val circeVersion = "0.13.0"
+val slickVersion = "3.3.3"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % Test,
   "org.scalatestplus" %% "scalatestplus-scalacheck" % scalaTestPlusVersion % Test,
+  "org.mockito" %% "mockito-scala" % "1.16.3",
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
   "com.typesafe.akka" %% "akka-serialization-jackson" % akkaVersion,
@@ -41,7 +43,11 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-optics" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
   "eu.timepit" %% "refined" % "0.9.19",
-  "io.circe" %% "circe-refined" % circeVersion
+  "io.circe" %% "circe-refined" % circeVersion,
+  "com.h2database" % "h2" % "1.4.200",
+  "com.typesafe.slick" %% "slick" % slickVersion,
+  "org.postgresql" % "postgresql" % "42.2.18",
+  "com.typesafe.slick" %% "slick-hikaricp" % slickVersion
 
 )
 
