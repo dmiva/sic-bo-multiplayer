@@ -10,10 +10,9 @@ object Lobby {
   def props(service: PlayerService) = Props(new Lobby(service: PlayerService))
 }
 
-// a.k.a API Gateway
 class Lobby(service: PlayerService) extends Actor {
   private val gameRoom = context.actorOf(GameRoom.props(), "game")
-  private val userService = context.actorOf(UserService.props(service), "repository")
+  private val userService = context.actorOf(UserService.props(service), "userService")
 
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 4.seconds) {
