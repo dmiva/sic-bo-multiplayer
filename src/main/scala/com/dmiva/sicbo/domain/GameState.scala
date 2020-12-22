@@ -131,6 +131,8 @@ final case class GameState(
     }
   }
 
+  def getGameResult: Map[Name, GameResult] = gameResult
+
   def setGamePhase(newPhase: GamePhase): GameState =
     this.copy(phase = newPhase)
 

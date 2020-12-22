@@ -2,13 +2,14 @@ package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.pattern.pipe
 import akka.util.ByteString
 import com.dmiva.sicbo.domain.DiceOutcome
 
 import scala.concurrent.Future
-import scala.util.{Random}
+import scala.util.Random
+import scala.util.control.NonFatal
 
 object DiceRoller {
   // Command
@@ -43,12 +44,14 @@ class DiceRoller extends Actor with ActorLogging {
   private val http = Http(system)
 
   private[actors] def getTrueRandomNumber(uri: Uri): Future[HttpResponse] = { // TODO: Manage UnknownHostException
-    log.info("Obtaining true random values for dice...")
-    http.singleRequest(HttpRequest(uri = uri))
+//    log.info("Obtaining true random values for dice...")
+    http.singleRequest(HttpRequest(uri = uri)) recover {
+      case NonFatal(t) => HttpResponse(StatusCodes.ServiceUnavailable)
+    }
   }
 
   private def getPseudoRNGDiceResult(replyTo: ActorRef): Unit = {
-    log.info("Obtaining pseudo random values for dice...")
+//    log.info("Obtaining pseudo random values for dice...")
     val a = Random.nextInt(6) + 1
     val b = Random.nextInt(6) + 1
     val c = Random.nextInt(6) + 1

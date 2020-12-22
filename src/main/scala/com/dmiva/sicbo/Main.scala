@@ -18,11 +18,11 @@ object Main {
     val config = system.settings.config
     val interface = config.getString("app.interface")
     val port = config.getInt("app.port")
-    val lobby = system.actorOf(Lobby.props(), "lobby")
-
     val db = Database.forConfig("database")
+
     val playerRepository: PlayerRepository = new PlayerRepository(db)
     val playerService: PlayerService = new PlayerService(playerRepository)
+    val lobby = system.actorOf(Lobby.props(playerService), "lobby")
     playerRepository.createSchema().onComplete {
       case Failure(exception) =>
         println(s"Failed to create database schema. Exception: $exception")

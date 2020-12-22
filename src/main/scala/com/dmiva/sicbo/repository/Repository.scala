@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.repository
 
-import com.dmiva.sicbo.domain.{Name, Player}
+import com.dmiva.sicbo.domain.{Balance, Name, Player}
 
 trait Repository[F[_]] {
 
@@ -10,7 +10,7 @@ trait Repository[F[_]] {
 
   def selectByName(name: Name): F[Option[Player]]
 
-  def updateByName(name: Name, player: Player): F[Int]
+  def updateByName(name: Name, balance: Balance): F[Int]
 
   def deleteByName(name: Name): F[Int]
 

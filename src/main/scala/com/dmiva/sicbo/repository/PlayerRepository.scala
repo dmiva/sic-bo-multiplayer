@@ -1,7 +1,7 @@
 package com.dmiva.sicbo.repository
 
 import cats.data.OptionT
-import com.dmiva.sicbo.domain.{Name, Player}
+import com.dmiva.sicbo.domain.{Balance, Name, Player}
 import com.dmiva.sicbo.repository.tables.PlayersTable
 import slick.jdbc.PostgresProfile.api._
 
@@ -31,11 +31,11 @@ class PlayerRepository(db: Database)(implicit ec: ExecutionContext)
       players.filter(_.username === name).take(1).result.headOption
     ))
 
-  override def updateByName(name: Name, player: Player): Future[Int] =
+  override def updateByName(name: Name, balance: Balance): Future[Int] =
     db.run(
       players.filter(_.username === name)
         .map(p => (p.balance))
-        .update((player.balance))
+        .update(balance)
     )
 
   override def deleteByName(name: Name): Future[Int] =

@@ -27,10 +27,12 @@ class PlayerService(repo: PlayerRepository)(implicit ec: ExecutionContext) {
     } yield player
   }
 
-  def loginPlayer(login: Login): EitherT[Future, PlayerNotFoundError, Player] = {
-    for {
-      player <- getPlayerByName(login.username)
-    } yield player
+  def loginPlayer(login: Login): Future[Option[Player]] = {
+    repo.selectByName(login.username)
+  }
+
+  def updateBalance(name: Name, balance: Balance): Future[Int] = {
+    repo.updateByName(name, balance)
   }
 
 

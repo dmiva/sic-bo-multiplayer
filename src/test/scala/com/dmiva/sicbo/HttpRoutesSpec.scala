@@ -32,7 +32,7 @@ class HttpRoutesSpec extends AnyFunSuite with Matchers with MockitoSugar with Sc
     Bet(Some(30), BetType.Total(6), None)
   )
 
-  val lobby = system.actorOf(Lobby.props())
+  val lobby = system.actorOf(Lobby.props(service))
 
   test("HTTP should response to /register endpoint ") {
     val registrationRequest = Register("Name", "pass").toText

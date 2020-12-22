@@ -7,7 +7,8 @@ import com.dmiva.sicbo.actors.GameRoom.Event.GotDiceResult
 import com.dmiva.sicbo.actors.repository.{CborSerializable, PlayerRepository}
 import com.dmiva.sicbo.common.OutgoingMessage
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, GamePhaseChanged}
-import com.dmiva.sicbo.domain.{Balance, Bet, DiceOutcome, GamePhase, GameState, Player}
+import com.dmiva.sicbo.domain.{Balance, Bet, DiceOutcome, GamePhase, GameState, Name, Player}
+
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 object GameRoom {
@@ -128,12 +129,13 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
       case Event.PlayerJoined(player) =>
         println(s"${player.username} joined the game.")
         if (state.phase == GamePhase.Idle) self ! GamePhase.PlacingBets
+        replyTo ! GamePhaseChanged(state.phase)
         context.become(handleCommand(users + (replyTo -> player)))
 
       case Event.PlayerLeft(player) =>
         println(s"${player.username} left the game.")
         context.become(handleCommand(users - replyTo))
-        saveBalanceToRepository(player)
+        saveBalanceToRepository(player.username)
 
       case Event.BetPlaced(player, bets) =>
         replyTo ! BetAccepted
@@ -162,21 +164,17 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
             startTimer(TimerSetting.makePayouts)
             broadcast(users,GamePhaseChanged(state.phase))
             println("Making payouts...")
-            state.calculateResults match {
-              case Left(e) => log.error(e)
-              case Right(newState) =>
-                state = newState
-                println(state.gameResult)
-                state.gameResult.foreachEntry {
-                  case (playerName, result) =>
-                    users.find { case (_, player) => player.username == playerName } match {
-                      case Some((ref, player)) => ref ! result
-                      case None =>
-                    }
+            println(state.gameResult)
+            state.gameResult.foreachEntry {
+              case (playerName, result) =>
+                users.find { case (_, player) => player.username == playerName } match {
+                  case Some((ref, player)) => ref ! result
+                  case None =>
                 }
-                users foreachEntry { case (ref, player) =>
-                  saveBalanceToRepository(player)
-                }
+            }
+            state.gameResult.foreachEntry {
+              case (playerName, _) =>
+                saveBalanceToRepository(playerName)
             }
 
           case GamePhase.GameEnded =>
@@ -221,9 +219,9 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
     }
   }
 
-  def saveBalanceToRepository(player: Player): Unit = {
-    val balance = state.getPlayerBalance(player.username)
-    context.parent ! PlayerRepository.Command.UpdateBalance(player.username, Balance(balance))
+  def saveBalanceToRepository(name: Name): Unit = {
+    val balance = state.getPlayerBalance(name)
+    context.parent ! PlayerRepository.Command.UpdateBalance2(name, Balance(balance))
   }
 
   def broadcast(players: Map[ActorRef, Player], msg: OutgoingMessage): Unit = {

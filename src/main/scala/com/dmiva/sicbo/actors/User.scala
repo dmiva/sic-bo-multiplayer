@@ -38,8 +38,8 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
       context.stop(self)
 
     case msg: IncomingMessage => msg match {
-      case Register(username, password)    => lobby ! PlayerRepository.Command.Register(username, password)
-      case Login(username, password)       => lobby ! PlayerRepository.Command.Login(username, password)
+//      case Register(username, password)    => lobby ! PlayerRepository.Command.Register(username, password)
+      case Login(username, password)       => lobby ! PlayerRepository.Command.Login2(username, password)
       case _                               => wsHandle ! Error(ErrorMessage.InvalidRequest)
     }
 
