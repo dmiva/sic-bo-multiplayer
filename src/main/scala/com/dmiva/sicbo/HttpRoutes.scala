@@ -2,29 +2,30 @@ package com.dmiva.sicbo
 
 import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.dmiva.sicbo.actors.{Lobby, User}
+import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult.PlayerAlreadyExists
+import com.dmiva.sicbo.actors.User
 import com.dmiva.sicbo.common.IncomingMessage.Register
 import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.OutgoingMessage.Error
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
-import com.dmiva.sicbo.repository.PlayerRepository
-import com.dmiva.sicbo.service.PlayerService
+import com.dmiva.sicbo.common.JsonConfig.customConfig
+import com.dmiva.sicbo.service.{PlayerAlreadyExistsError, PlayerService}
 import io.circe.jawn.decode
 import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import io.circe.syntax.EncoderOps
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
 
 class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: ActorSystem, val executionContext: ExecutionContext) extends Directives {
-
 
   val helloRoute: Route =
     get {
@@ -34,15 +35,27 @@ class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: A
     }
 
   val registerRoute: Route =
-
     (post & path("register")) {
       entity(as[Register]) { registerRequest =>
-        complete(service.register(registerRequest))
-//        inserted onComplete {
-//          case Success(value) => complete(StatusCodes.Created)
-//          case Failure(exception) => complete(StatusCodes.InternalServerError)
-//        }
+        val request = for {
+          result <- service.registerPlayer(registerRequest)
+        } yield result
 
+        onComplete(request.value) {
+          case Failure(ex) => complete(StatusCodes.InternalServerError)
+          case Success(value) => value match {
+            case Left(PlayerAlreadyExistsError(player)) => complete(
+              HttpResponse(
+                status = StatusCodes.Conflict,
+                entity = HttpEntity(ContentTypes.`application/json`, Error(PlayerAlreadyExists).asJson.toString)
+              )
+            )
+            case Right(player) => complete(HttpResponse(
+              status = StatusCodes.Created,
+              entity = HttpEntity(ContentTypes.`application/json`, player.asJson.toString
+              )))
+          }
+        }
       }
     }
 
@@ -71,7 +84,6 @@ class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: A
     }
 
     val source: Source[Message, NotUsed] =
-
       Source.actorRef[OutgoingMessage](
         completionMatcher = sourceCompletionMatcher,
         failureMatcher = PartialFunction.empty,
@@ -80,7 +92,7 @@ class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: A
         .map {
           message: OutgoingMessage => message.toTextMessage
         }
-        // wsOutput is handle that is used to send messages to WS
+        // wsHandle is handle that is used to send messages to WS
         // When wsOutput sends a message, it is emitted to websockets stream
         .mapMaterializedValue { wsHandle =>
           // Pass the handle to newly created actor, that is handling user connection
@@ -99,6 +111,6 @@ class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: A
       }
     }
 
-  val routes = helloRoute ~ webSocketRoute ~ registerRoute
+  val routes: Route = helloRoute ~ webSocketRoute ~ registerRoute
 
 }

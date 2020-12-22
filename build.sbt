@@ -20,6 +20,7 @@ val scalaTestPlusVersion = "3.1.0.0-RC2"
 val scalaCheckVersion = "1.15.1"
 val circeVersion = "0.13.0"
 val slickVersion = "3.3.3"
+val catsVersion = "2.3.1"
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
@@ -42,13 +43,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-optics" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,
-  "eu.timepit" %% "refined" % "0.9.19",
-  "io.circe" %% "circe-refined" % circeVersion,
-  "com.h2database" % "h2" % "1.4.200",
   "com.typesafe.slick" %% "slick" % slickVersion,
   "org.postgresql" % "postgresql" % "42.2.18",
-  "com.typesafe.slick" %% "slick-hikaricp" % slickVersion
-
+  "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
+  "org.typelevel" %% "cats-core" % catsVersion,
 )
 
 fork in run := true

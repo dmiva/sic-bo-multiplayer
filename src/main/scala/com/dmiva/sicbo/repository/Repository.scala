@@ -6,7 +6,7 @@ trait Repository[F[_]] {
 
   def createSchema(): F[Unit]
 
-  def insert(player: Player): F[Int]
+  def insert(player: Player): F[Player]
 
   def selectByName(name: Name): F[Option[Player]]
 

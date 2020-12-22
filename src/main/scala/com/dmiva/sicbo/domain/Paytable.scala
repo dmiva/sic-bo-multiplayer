@@ -35,16 +35,16 @@ final case class Paytable(dice: DiceOutcome) {
   private val evenPayout: Int = payoutIfTripple
   private val oddPayout: Int = payoutIfTripple
 
-  private def getNumberPayout(num: Int): Int = if (dice.hasNumber(num)) numberPayout(num) else 0
+  private def getNumberPayout(num: Int): Int      = if (dice.hasNumber(num)) numberPayout(num) else 0
   private def getComboPayout(a: Int, b: Int): Int = if (dice.hasCombo(a, b)) comboPayout else 0
-  private def getTotalPayout(num: Int): Int = if (dice.hasTotal(num)) totalPayout(num) else 0
-  private def getDoublePayout(num: Int): Int = if (dice.hasDouble(num)) doublePayout else 0
-  private def getTriplePayout(num: Int): Int = if (dice.hasTriple(num)) triplePayout else 0
-  private def getAnyTriplePayout: Int = if (dice.hasAnyTriple) anyTriplePayout else 0
-  private def getBigPayout: Int = if (dice.isBig) bigPayout else 0
-  private def getSmallPayout: Int = if (dice.isSmall) smallPayouyt else 0
-  private def getEvenPayout: Int = if (dice.isEven) evenPayout else 0
-  private def getOddPayout: Int = if (dice.isOdd) oddPayout else 0
+  private def getTotalPayout(num: Int): Int       = if (dice.hasTotal(num)) totalPayout(num) else 0
+  private def getDoublePayout(num: Int): Int      = if (dice.hasDouble(num)) doublePayout else 0
+  private def getTriplePayout(num: Int): Int      = if (dice.hasTriple(num)) triplePayout else 0
+  private def getAnyTriplePayout: Int             = if (dice.hasAnyTriple) anyTriplePayout else 0
+  private def getBigPayout: Int                   = if (dice.isBig) bigPayout else 0
+  private def getSmallPayout: Int                 = if (dice.isSmall) smallPayouyt else 0
+  private def getEvenPayout: Int                  = if (dice.isEven) evenPayout else 0
+  private def getOddPayout: Int                   = if (dice.isOdd) oddPayout else 0
 
   def applyPayout(bet: Bet): Bet = {
     val betAmount: BigDecimal = bet.amount.getOrElse(BigDecimal(0))

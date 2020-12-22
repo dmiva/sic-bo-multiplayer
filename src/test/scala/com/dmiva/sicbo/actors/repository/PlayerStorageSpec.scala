@@ -29,12 +29,12 @@ class PlayerStorageSpec extends AnyFunSuite with Matchers {
     newStorage.players.size shouldEqual 11
   }
 
-  test("User storage should return Some(User(...)) with getUserByName if user exists") {
+  test("User storage should return Some(User(...)) with getPlayerByName if user exists") {
     val storage = populateStorage(PlayerStorage(), 10)
     storage.getPlayerByName(nameThatExists) shouldEqual Some(userThatExists)
   }
 
-  test("User storage should return None with getUserByName if user don't exists") {
+  test("User storage should return None with getPlayerByName if user don't exists") {
     val storage = populateStorage(PlayerStorage(), 10)
     storage.getPlayerByName(nameThatDontExist) shouldEqual None
   }

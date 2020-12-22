@@ -1,11 +1,13 @@
 package com.dmiva.sicbo.repository
 
+import cats.data.OptionT
 import com.dmiva.sicbo.domain.{Name, Player}
 import com.dmiva.sicbo.repository.tables.PlayersTable
 import slick.jdbc.PostgresProfile.api._
-import scala.concurrent.Future
 
-class PlayerRepository(db: Database)
+import scala.concurrent.{ExecutionContext, Future}
+
+class PlayerRepository(db: Database)(implicit ec: ExecutionContext)
   extends Repository[Future]
   with PlayersTable {
 
@@ -14,15 +16,20 @@ class PlayerRepository(db: Database)
       players.schema.createIfNotExists
     )
 
-  override def insert(player: Player): Future[Int] =
+  override def insert(player: Player): Future[Player] =
     db.run(
-      players += player
-    )
+      players returning players.map(_.id) += player
+    ).map(id => player.copy(id = id))
 
   override def selectByName(name: Name): Future[Option[Player]] =
     db.run(
       players.filter(_.username === name).take(1).result.headOption
     )
+
+  def findByName(name: Name): OptionT[Future, Player] =
+    OptionT(db.run(
+      players.filter(_.username === name).take(1).result.headOption
+    ))
 
   override def updateByName(name: Name, player: Player): Future[Int] =
     db.run(
@@ -40,4 +47,5 @@ class PlayerRepository(db: Database)
     db.run(
       players.filter(_.username === name).exists.result
     )
+
 }

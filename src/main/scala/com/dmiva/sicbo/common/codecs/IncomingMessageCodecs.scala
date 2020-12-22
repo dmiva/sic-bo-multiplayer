@@ -8,7 +8,6 @@ import com.dmiva.sicbo.domain.Bet
 import io.circe.syntax.EncoderOps
 
 object IncomingMessageCodecs {
-//  implicit val incomingMessageEncoder: Encoder.AsObject[IncomingMessage] = deriveConfiguredEncoder
   implicit val incomingMessageEncoder: Encoder[IncomingMessage] = deriveConfiguredEncoder
   implicit val incomingMessageDecoder: Decoder[IncomingMessage] = deriveConfiguredDecoder
 

@@ -1,17 +1,38 @@
 package com.dmiva.sicbo.service
 
-import com.dmiva.sicbo.common.IncomingMessage.Register
-import com.dmiva.sicbo.domain.{Balance, Player, UserType}
+import cats.data.EitherT
+import com.dmiva.sicbo.common.IncomingMessage.{Login, Register}
+import com.dmiva.sicbo.domain.{Balance, Name, Player, UserType}
 import com.dmiva.sicbo.repository.PlayerRepository
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class PlayerService(repo: PlayerRepository) {
+case class PlayerAlreadyExistsError(player: Player)
+case class PlayerNotFoundError()
+case class PasswordIsIncorrect()
 
+class PlayerService(repo: PlayerRepository)(implicit ec: ExecutionContext) {
 
-  def register(reg: Register): Future[Int] = {
-    val player = Player(0, reg.username, reg.password, UserType.User, Balance(100))
-    repo.insert(player)
+  def playerDoesNotExist(name: Name): EitherT[Future, PlayerAlreadyExistsError, Unit] = {
+    repo.findByName(name).map(PlayerAlreadyExistsError).toLeft(())
   }
+
+  def getPlayerByName(name: String): EitherT[Future, PlayerNotFoundError, Player] =
+    repo.findByName(name).toRight(PlayerNotFoundError())
+
+  def registerPlayer(reg: Register): EitherT[Future, PlayerAlreadyExistsError, Player] = {
+    for {
+      _ <- playerDoesNotExist(reg.username)
+      player <- EitherT.liftF(repo.insert(Player(0, reg.username, reg.password, UserType.User, Balance(100))))
+    } yield player
+  }
+
+  def loginPlayer(login: Login): EitherT[Future, PlayerNotFoundError, Player] = {
+    for {
+      player <- getPlayerByName(login.username)
+    } yield player
+  }
+
+
 
 }
