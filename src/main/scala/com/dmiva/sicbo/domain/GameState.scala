@@ -1,11 +1,20 @@
 package com.dmiva.sicbo.domain
 
 import com.dmiva.sicbo.actors.repository.CborSerializable
-import com.dmiva.sicbo.common.BetRejectReason
 import com.dmiva.sicbo.common.OutgoingMessage.GameResult
+import com.dmiva.sicbo.domain.GameState.BetRejectReason
 
 
 object GameState {
+
+  sealed trait BetRejectReason
+  object BetRejectReason {
+    val NotEnoughBalance = "Not enough balance"
+    val TimeExpired = "Wait for the next round"
+    val BetAmountNotPositive = "Bet amount not positive"
+    val MustBeAtLeastOneBet = "Must be at least one bet"
+    def PlayerNotInGame(name: String) = s"Player $name is not in game"
+  }
 
   def initGame: GameState = GameState(
     phase = GamePhase.Idle,

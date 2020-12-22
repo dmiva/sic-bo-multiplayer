@@ -31,7 +31,7 @@ object OutgoingMessageCodecs {
   implicit val gamePhaseEncoder: Encoder[GamePhase] = deriveEnumerationEncoder
   implicit val gamePhaseDecoder: Decoder[GamePhase] = deriveEnumerationDecoder
 
-  implicit class outgoingMessageOps(message: OutgoingMessage) {
+  implicit class OutgoingMessageOps(val message: OutgoingMessage) extends AnyVal {
     def toText: String = message.asJson.toString()
     def toTextMessage: TextMessage = TextMessage.Strict(message.asJson.toString())
   }

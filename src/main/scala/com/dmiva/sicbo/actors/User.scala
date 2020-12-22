@@ -6,11 +6,19 @@ import com.dmiva.sicbo.actors.repository.PlayerRepository
 import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
-import com.dmiva.sicbo.common.{ErrorMessage, IncomingMessage, OutgoingMessage}
+import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.domain.{Player, PlayerInfo}
 
 object User {
-  case class Connected(wsHandle: ActorRef)
+
+  sealed trait ErrorMessage
+  object ErrorMessage {
+    val NotLoggedIn = "User is not logged in"
+    val AlreadyLoggedIn = "Login attempt when already logged in"
+    val InvalidRequest = "Invalid request"
+  }
+
+  final case class Connected(wsHandle: ActorRef)
   case object Disconnected
 
   def props(lobby: ActorRef) = Props(new User(lobby))

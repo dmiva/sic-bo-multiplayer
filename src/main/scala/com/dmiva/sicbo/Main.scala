@@ -28,7 +28,6 @@ object Main {
         println(s"Failed to create database schema. Exception: $exception")
         throw exception
       case Success(_) =>
-        println(s"Player repository schema successfully created")
     }
 
     val httpRoutes = new HttpRoutes(lobby, playerService)
@@ -41,12 +40,14 @@ object Main {
       case Failure(ex) =>
         println(s"Binding failed. Reason: ${ex.getMessage}")
         system.terminate()
+        db.close()
     }
 
     sys.addShutdownHook {
       binding.flatMap(_.terminate(hardDeadline = 3.seconds)).flatMap { _ =>
         system.terminate()
       }
+      db.close()
     }
 
   }

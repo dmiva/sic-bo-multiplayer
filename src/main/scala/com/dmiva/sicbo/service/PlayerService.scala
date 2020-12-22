@@ -4,37 +4,40 @@ import cats.data.EitherT
 import com.dmiva.sicbo.common.IncomingMessage.{Login, Register}
 import com.dmiva.sicbo.domain.{Balance, Name, Player, UserType}
 import com.dmiva.sicbo.repository.PlayerRepository
+import com.dmiva.sicbo.service.PlayerService.initialBalance
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PlayerAlreadyExistsError(player: Player)
-case class PlayerNotFoundError()
-case class PasswordIsIncorrect()
+final case class PlayerAlreadyExistsError(player: Player)
+final case class PlayerNotFoundError()
+final case class PasswordIsIncorrect()
 
-class PlayerService(repo: PlayerRepository)(implicit ec: ExecutionContext) {
+object PlayerService {
+  val initialBalance = BigDecimal(100)
+}
+
+class PlayerService(playerRepository: PlayerRepository)(implicit ec: ExecutionContext) {
 
   def playerDoesNotExist(name: Name): EitherT[Future, PlayerAlreadyExistsError, Unit] = {
-    repo.findByName(name).map(PlayerAlreadyExistsError).toLeft(())
+    playerRepository.findByName(name).map(PlayerAlreadyExistsError).toLeft(())
   }
 
   def getPlayerByName(name: String): EitherT[Future, PlayerNotFoundError, Player] =
-    repo.findByName(name).toRight(PlayerNotFoundError())
+    playerRepository.findByName(name).toRight(PlayerNotFoundError())
 
   def registerPlayer(reg: Register): EitherT[Future, PlayerAlreadyExistsError, Player] = {
     for {
       _ <- playerDoesNotExist(reg.username)
-      player <- EitherT.liftF(repo.insert(Player(0, reg.username, reg.password, UserType.User, Balance(100))))
+      player <- EitherT.liftF(playerRepository.insert(Player(0, reg.username, reg.password, UserType.User, Balance(initialBalance))))
     } yield player
   }
 
   def loginPlayer(login: Login): Future[Option[Player]] = {
-    repo.selectByName(login.username)
+    playerRepository.selectByName(login.username)
   }
 
   def updateBalance(name: Name, balance: Balance): Future[Int] = {
-    repo.updateByName(name, balance)
+    playerRepository.updateByName(name, balance)
   }
-
-
 
 }

@@ -31,9 +31,9 @@ object BetType {
   @JsonTypeName("big")        case object Big extends Big
   @JsonTypeName("even")       case object Even extends Even
   @JsonTypeName("odd")        case object Odd extends Odd
-                              case class Number(num: Int) extends BetType
-                              case class Total(num: Int) extends BetType
-                              case class Combo(a: Int, b: Int) extends BetType /*{
+                              final case class Number(num: Int) extends BetType
+                              final case class Total(num: Int) extends BetType
+                              final case class Combo(a: Int, b: Int) extends BetType /*{
     override def equals(obj: Any): Boolean = {
       obj match {
         case other: Combo => (a == other.a && b == other.b) || (a == other.b && b == other.a)
@@ -41,8 +41,8 @@ object BetType {
       }
     }
   }*/
-                              case class Double(num: Int) extends BetType
-                              case class Triple(num: Int) extends BetType
+                              final case class Double(num: Int) extends BetType
+                              final case class Triple(num: Int) extends BetType
   @JsonTypeName("any_triple") case object AnyTriple extends AnyTriple
 
   // Intermediate trait and a custom deserializer are needed for Akka persistence serialization

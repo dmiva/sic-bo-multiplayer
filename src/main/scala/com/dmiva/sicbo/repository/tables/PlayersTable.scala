@@ -10,14 +10,15 @@ trait PlayersTable {
 
   implicit val userTypeColumnType: JdbcType[UserType] with BaseTypedType[UserType] =
     MappedColumnType.base[UserType, String](
-      userType => userType match {
+      {
         case UserType.User => "user"
         case UserType.Admin => "admin"
       },
-      strValue => strValue match {
+      {
         case "user" => UserType.User
         case "admin" => UserType.Admin
       })
+
   implicit val balanceColumnType: JdbcType[Balance] with BaseTypedType[Balance] =
     MappedColumnType.base[Balance, BigDecimal](_.amount, Balance)
 

@@ -11,7 +11,7 @@ object IncomingMessageCodecs {
   implicit val incomingMessageEncoder: Encoder[IncomingMessage] = deriveConfiguredEncoder
   implicit val incomingMessageDecoder: Decoder[IncomingMessage] = deriveConfiguredDecoder
 
-  implicit val betEncoder: Encoder.AsObject[Bet] = deriveConfiguredEncoder[Bet]
+  implicit val betEncoder: Encoder[Bet] = deriveConfiguredEncoder[Bet]
   implicit val betDecoder: Decoder[Bet] = deriveConfiguredDecoder[Bet]
 
   implicit class incomingMessageOps(message: IncomingMessage) {

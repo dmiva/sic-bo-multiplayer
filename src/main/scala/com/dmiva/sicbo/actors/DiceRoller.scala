@@ -15,9 +15,9 @@ object DiceRoller {
   // Command
   case object RollDice
   // Event
-  case class DiceResult(dice: DiceOutcome)
+  final case class DiceResult(dice: DiceOutcome)
 
-  private case class Result(response: HttpResponse, replyTo: ActorRef)
+  private final case class Result(response: HttpResponse, replyTo: ActorRef)
 
   def props() = Props(new DiceRoller)
 
@@ -75,7 +75,7 @@ class DiceRoller extends Actor with ActorLogging {
       futureResult pipeTo self
 
     case Result(response, replyTo) => response match {
-      case HttpResponse(StatusCodes.OK, headers, entity, _) =>
+      case HttpResponse(StatusCodes.OK, _, entity, _) =>
 
         entity.dataBytes.runFold(ByteString(""))(_ ++ _).foreach { body =>
           // response is 6 bytes, which are 3 numbers, delimited with new line character

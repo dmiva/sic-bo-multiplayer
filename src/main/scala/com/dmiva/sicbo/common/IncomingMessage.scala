@@ -11,5 +11,5 @@ object IncomingMessage {
   final case class Logout(username: Name) extends IncomingMessage
   final case class PlaceBet(bets: List[Bet]) extends IncomingMessage
 
-  implicit val customPrinter = Printer.spaces2.copy(dropNullValues = true)
+  implicit val customPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
 }

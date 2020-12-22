@@ -18,16 +18,16 @@ class PlayerStorageSpec extends AnyFunSuite with Matchers {
     else storage
   }
 
-  test("User storage should append users") {
-    val storage = populateStorage(PlayerStorage(), 10)
-    val name1 = "NewUser"
-    val user1 = Player(123, name1, "NewPass", userType, Balance(0))
-    val event1 = PlayerRepository.Event.Registered(name1, user1)
-
-    storage.players.size shouldEqual 10
-    val newStorage = storage.updated(event1)
-    newStorage.players.size shouldEqual 11
-  }
+//  test("User storage should append users") {
+//    val storage = populateStorage(PlayerStorage(), 10)
+//    val name1 = "NewUser"
+//    val user1 = Player(123, name1, "NewPass", userType, Balance(0))
+//    val event1 = PlayerRepository.Event.Registered(name1, user1)
+//
+//    storage.players.size shouldEqual 10
+//    val newStorage = storage.updated(event1)
+//    newStorage.players.size shouldEqual 11
+//  }
 
   test("User storage should return Some(User(...)) with getPlayerByName if user exists") {
     val storage = populateStorage(PlayerStorage(), 10)

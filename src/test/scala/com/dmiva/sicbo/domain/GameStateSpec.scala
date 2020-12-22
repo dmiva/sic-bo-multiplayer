@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.domain
 
-import com.dmiva.sicbo.common.BetRejectReason
+import com.dmiva.sicbo.domain.GameState.BetRejectReason
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -167,11 +167,9 @@ class GameStateSpec extends AnyFunSuite with Matchers {
       a <- GameState.initGame
         .startNewGame
         .addPlayer(player)
-        .placeBet(player.username, bets)
-      b <- a
         .setGamePhase(GamePhase.RollingDice)
         .applyDiceOutcome(dice)
-      newState <- b
+      newState <- a
         .setGamePhase(GamePhase.MakePayouts)
         .calculateResults
     } yield newState.gameResult

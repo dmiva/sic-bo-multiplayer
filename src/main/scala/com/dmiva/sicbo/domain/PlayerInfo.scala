@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.domain
 
-case class PlayerInfo(id: Long, username: Name, userType: UserType, balance: Balance)
+final case class PlayerInfo(id: Long, username: Name, userType: UserType, balance: Balance)
 
 object PlayerInfo {
 

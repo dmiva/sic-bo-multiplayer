@@ -1,10 +1,10 @@
 package com.dmiva.sicbo.actors.repository
 
-import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.Command.{Login, Login2, LoginRequestResult, Register, UpdateBalance, UpdateBalance2, UpdateBalanceResult}
 import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult._
-import PlayerRepository.{Event, LoginResult}
+import PlayerRepository.{LoginResult}
 import akka.pattern.pipe
 import com.dmiva.sicbo.common.IncomingMessage
 import com.dmiva.sicbo.common.OutgoingMessage.{Error, RegistrationSuccessful}
@@ -19,21 +19,21 @@ object PlayerRepository {
   /** All the commands that the PlayerRepository persistent actor supports. */
   sealed trait Command extends CborSerializable
   object Command {
-    case class Register(username: Name, password: Password) extends Command
-    case class Login(username: Name, password: Password) extends Command
-    case class Login2(username: Name, password: Password) extends Command
-    case class UpdateBalance(username: Name, balance: Balance) extends Command
-    case class UpdateBalance2(username: Name, balance: Balance) extends Command
-    case class UpdateBalanceResult(int: Int, replyTo: ActorRef) extends Command
-    case class LoginRequestResult(player: Option[Player], password: Password, replyTo: ActorRef) extends Command
+    final case class Register(username: Name, password: Password) extends Command
+    final case class Login(username: Name, password: Password) extends Command
+    final case class Login2(username: Name, password: Password) extends Command
+    final case class UpdateBalance(username: Name, balance: Balance) extends Command
+    final case class UpdateBalance2(username: Name, balance: Balance) extends Command
+    final case class UpdateBalanceResult(int: Int, replyTo: ActorRef) extends Command
+    final case class LoginRequestResult(player: Option[Player], password: Password, replyTo: ActorRef) extends Command
   }
 
   /** All the events that the PlayerRepository supports. */
-  sealed trait Event extends CborSerializable
-  object Event {
-    case class Registered(username: Name, player: Player) extends Event
-    case class BalanceUpdated(username: Name, player: Player) extends Event
-  }
+//  sealed trait Event extends CborSerializable
+//  object Event {
+//    case class Registered(username: Name, player: Player) extends Event
+//    case class BalanceUpdated(username: Name, player: Player) extends Event
+//  }
 
   sealed trait RegistrationResult
   object RegistrationResult {
@@ -47,7 +47,7 @@ object PlayerRepository {
 
   sealed trait LoginResult
   object LoginResult {
-    case class Successful(player: Player) extends LoginResult
+    final case class Successful(player: Player) extends LoginResult
     case object UserDoesNotExist extends LoginResult
     case object PasswordIncorrect extends LoginResult
 
@@ -55,33 +55,35 @@ object PlayerRepository {
   }
 
   def props(service: PlayerService): Props = Props(new PlayerRepository(service))
-  val persistenceId = "player-repository-id-1"
+//  val persistenceId = "player-repository-id-1"
 }
 
-class PlayerRepository(service: PlayerService) extends PersistentActor with ActorLogging {
+//class PlayerRepository(playerService: PlayerService) extends PersistentActor with ActorLogging {
+class PlayerRepository(service: PlayerService) extends Actor with ActorLogging {
 
-  override def persistenceId: String = PlayerRepository.persistenceId
+//  override def persistenceId: String = PlayerRepository.persistenceId
 
-  var storage: PlayerStorage = PlayerStorage(Map.empty) // Map[Name, Player]
+//  var storage: PlayerStorage = PlayerStorage(Map.empty) // Map[Name, Player]
+//
+//  def updateStorage(event: Event): Unit = {
+//    storage = storage.updated(event)
+//  }
 
-  def updateStorage(event: Event): Unit = {
-    storage = storage.updated(event)
-  }
+//  override def receiveRecover: Receive = {
+//    case evt: Event => updateStorage(evt)
+//    case SnapshotOffer(metadata, snapshot: PlayerStorage) => storage = snapshot
+//      log.info(s"Snapshot ${metadata.persistenceId} seqId=${metadata.sequenceNr} recovered successfully.")
+//  }
 
-  override def receiveRecover: Receive = {
-    case evt: Event => updateStorage(evt)
-    case SnapshotOffer(metadata, snapshot: PlayerStorage) => storage = snapshot
-      log.info(s"Snapshot ${metadata.persistenceId} seqId=${metadata.sequenceNr} recovered successfully.")
-  }
-
-  val snapshotInterval = 5
+//  val snapshotInterval = 5
 
   // 1. Actor receives commands (messages)
-  override def receiveCommand: Receive = {
-    case SaveSnapshotSuccess(metadata)         =>
-      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
-    case SaveSnapshotFailure(metadata, reason) =>
-      log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
+//  override def receiveCommand: Receive = {
+  override def receive: Receive = {
+//    case SaveSnapshotSuccess(metadata)         =>
+//      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
+//    case SaveSnapshotFailure(metadata, reason) =>
+//      log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
 //    case Register(name, pw) => {
 //      val replyTo = sender()
 //      val result = (name, pw) match {
@@ -144,13 +146,7 @@ class PlayerRepository(service: PlayerService) extends PersistentActor with Acto
         .map(result => UpdateBalanceResult(result, replyTo))
       futureResult pipeTo self
     }
-    case UpdateBalanceResult(numOfRowsUpdated, replyTo) => {
-      numOfRowsUpdated match {
-        case 0 => println("Updated 0 rows")
-        case 1 => println("Updated 1 rows")
-      }
-    }
-
+    case UpdateBalanceResult(numOfRowsUpdated, replyTo) => // do nothing
 
   }
 

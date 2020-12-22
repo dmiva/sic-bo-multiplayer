@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
 
-class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: ActorSystem, val executionContext: ExecutionContext) extends Directives {
+class HttpRoutes(lobby: ActorRef, playerService: PlayerService)(implicit val system: ActorSystem, val executionContext: ExecutionContext) extends Directives {
 
   val helloRoute: Route =
     get {
@@ -38,7 +38,7 @@ class HttpRoutes(lobby: ActorRef, service: PlayerService)(implicit val system: A
     (post & path("register")) {
       entity(as[Register]) { registerRequest =>
         val request = for {
-          result <- service.registerPlayer(registerRequest)
+          result <- playerService.registerPlayer(registerRequest)
         } yield result
 
         onComplete(request.value) {

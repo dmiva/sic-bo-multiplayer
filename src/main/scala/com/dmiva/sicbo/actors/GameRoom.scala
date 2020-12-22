@@ -15,19 +15,19 @@ object GameRoom {
 
   sealed trait Command extends CborSerializable
   object Command {
-    case class Join(ref: ActorRef, player: Player) extends Command
-    case class Leave(ref: ActorRef, player: Player) extends Command
-    case class PlaceBet(ref: ActorRef, player: Player, bets: List[Bet]) extends Command
+    final case class Join(ref: ActorRef, player: Player) extends Command
+    final case class Leave(ref: ActorRef, player: Player) extends Command
+    final case class PlaceBet(ref: ActorRef, player: Player, bets: List[Bet]) extends Command
   }
 
   /** Persisted events */
   sealed trait Event extends CborSerializable
   object Event {
-    case class PlayerJoined(player: Player) extends Event
-    case class PlayerLeft(player: Player) extends Event
-    case class BetPlaced(player: Player, bets: List[Bet]) extends Event
-    case class GotDiceResult(dice: DiceOutcome) extends Event
-    case class GamePhaseChanged(newPhase: GamePhase) extends Event
+    final case class PlayerJoined(player: Player) extends Event
+    final case class PlayerLeft(player: Player) extends Event
+    final case class BetPlaced(player: Player, bets: List[Bet]) extends Event
+    final case class GotDiceResult(dice: DiceOutcome) extends Event
+    final case class GamePhaseChanged(newPhase: GamePhase) extends Event
   }
 
   /** Timers for game phase change scheduling */
@@ -129,8 +129,8 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
       case Event.PlayerJoined(player) =>
         println(s"${player.username} joined the game.")
         if (state.phase == GamePhase.Idle) self ! GamePhase.PlacingBets
-        replyTo ! GamePhaseChanged(state.phase)
         context.become(handleCommand(users + (replyTo -> player)))
+        replyTo ! GamePhaseChanged(state.phase)
 
       case Event.PlayerLeft(player) =>
         println(s"${player.username} left the game.")
