@@ -2,20 +2,20 @@ package com.dmiva.sicbo.actors
 
 import akka.Done
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.dmiva.sicbo.actors.repository.PlayerRepository
-import com.dmiva.sicbo.actors.repository.PlayerRepository.LoginResult
-import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet, Register}
-import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginFailed, LoginSuccessful}
+import com.dmiva.sicbo.actors.UserService.LoginResult
+import com.dmiva.sicbo.common.IncomingMessage.{Login, Logout, PlaceBet}
+import com.dmiva.sicbo.common.OutgoingMessage.{Error, LoggedOut, LoginSuccessful}
 import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.domain.{Player, PlayerInfo}
 
 object User {
 
-  sealed trait ErrorMessage
   object ErrorMessage {
     val NotLoggedIn = "User is not logged in"
     val AlreadyLoggedIn = "Login attempt when already logged in"
     val InvalidRequest = "Invalid request"
+    val UserDoesNotExist = "User does not exist"
+    val PasswordIncorrect = "Password is incorrect"
   }
 
   final case class Connected(wsHandle: ActorRef)
@@ -46,14 +46,13 @@ class User(lobby: ActorRef) extends Actor with ActorLogging {
       context.stop(self)
 
     case msg: IncomingMessage => msg match {
-//      case Register(username, password)    => lobby ! PlayerRepository.Command.Register(username, password)
-      case Login(username, password)       => lobby ! PlayerRepository.Command.Login2(username, password)
+      case Login(username, password)       => lobby ! UserService.Command.Login(username, password)
       case _                               => wsHandle ! Error(ErrorMessage.InvalidRequest)
     }
 
-    case msg: PlayerRepository.LoginResult => msg match {
-      case LoginResult.UserDoesNotExist    => wsHandle ! LoginFailed // TODO: Send reason
-      case LoginResult.PasswordIncorrect   => wsHandle ! LoginFailed
+    case msg: UserService.LoginResult => msg match {
+      case LoginResult.UserDoesNotExist    => wsHandle ! Error(ErrorMessage.UserDoesNotExist) // TODO: Send reason
+      case LoginResult.PasswordIncorrect   => wsHandle ! Error(ErrorMessage.PasswordIncorrect)
       case LoginResult.Successful(user)    => // Automatic join to game because it's the only game room
                                               lobby ! GameRoom.Command.Join(self, user)
                                               val playerInfo = PlayerInfo.from(user)

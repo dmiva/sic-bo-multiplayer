@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.domain
 
-import com.dmiva.sicbo.actors.repository.CborSerializable
+import com.dmiva.sicbo.common.CborSerializable
 
 final case class Player(
                          id: Long,

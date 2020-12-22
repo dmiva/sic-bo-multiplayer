@@ -1,6 +1,6 @@
 package com.dmiva.sicbo.domain
 
-import com.dmiva.sicbo.actors.repository.CborSerializable
+import com.dmiva.sicbo.common.CborSerializable
 import com.dmiva.sicbo.common.OutgoingMessage.GameResult
 import com.dmiva.sicbo.domain.GameState.BetRejectReason
 

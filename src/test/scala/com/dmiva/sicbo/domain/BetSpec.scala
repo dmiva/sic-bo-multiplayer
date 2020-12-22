@@ -65,10 +65,10 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
 
   test("Double bets should be evaluated correctly with randomized input") {
     forAll(
-      choose(1, 6),
-      choose(1, 6),
-      choose(1, 6),
-      choose(1, 6)
+      choose(1, 6), // this is bet to Double (from 1 to 6)
+      choose(1, 6), // Dice
+      choose(1, 6), // Dice
+      choose(1, 6) // Dice
     ) { case (bet, a, b, c) =>
 
         val nonZero = a > 0 && b > 0 && c > 0
@@ -77,6 +77,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
         else if (a == c) a
         else if (b == c) b else 0
         println(s"Bet: Double($bet) , Dice: $a $b $c , gameResult = ${if (doubleValue == bet) "won" else "lost"}")
+
         DiceOutcome(a,b,c).hasDouble(doubleValue) shouldEqual result
         Bet.isWinningBetType(BetType.Double(0), DiceOutcome(a,b,c)) shouldEqual false
         Bet.isWinningBetType(BetType.Double(bet), DiceOutcome(a,b,c)) shouldEqual (doubleValue == bet)

@@ -1,6 +1,5 @@
 package com.dmiva.sicbo
 import com.dmiva.sicbo.actors.User.ErrorMessage
-import com.dmiva.sicbo.common.OutgoingMessage.LoginFailed
 import com.dmiva.sicbo.common.OutgoingMessage
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs.OutgoingMessageOps
 import com.dmiva.sicbo.domain.{GamePhase, PlayerInfo}

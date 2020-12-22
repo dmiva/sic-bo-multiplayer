@@ -4,8 +4,7 @@ import akka.actor.SupervisorStrategy.{Escalate, Restart}
 import akka.actor.{ActorLogging, ActorRef, OneForOneStrategy, Props, Timers}
 import akka.persistence.{PersistentActor, SaveSnapshotFailure, SaveSnapshotSuccess, SnapshotOffer}
 import com.dmiva.sicbo.actors.GameRoom.Event.GotDiceResult
-import com.dmiva.sicbo.actors.repository.{CborSerializable, PlayerRepository}
-import com.dmiva.sicbo.common.OutgoingMessage
+import com.dmiva.sicbo.common.{CborSerializable, OutgoingMessage}
 import com.dmiva.sicbo.common.OutgoingMessage.{BetAccepted, BetRejected, GamePhaseChanged}
 import com.dmiva.sicbo.domain.{Balance, Bet, DiceOutcome, GamePhase, GameState, Name, Player}
 
@@ -221,7 +220,7 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
 
   def saveBalanceToRepository(name: Name): Unit = {
     val balance = state.getPlayerBalance(name)
-    context.parent ! PlayerRepository.Command.UpdateBalance2(name, Balance(balance))
+    context.parent ! UserService.Command.UpdateBalance(name, Balance(balance))
   }
 
   def broadcast(players: Map[ActorRef, Player], msg: OutgoingMessage): Unit = {

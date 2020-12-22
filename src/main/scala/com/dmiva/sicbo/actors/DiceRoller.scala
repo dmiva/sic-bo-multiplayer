@@ -2,7 +2,7 @@ package com.dmiva.sicbo.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes, Uri}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.pattern.pipe
 import akka.util.ByteString
 import com.dmiva.sicbo.domain.DiceOutcome

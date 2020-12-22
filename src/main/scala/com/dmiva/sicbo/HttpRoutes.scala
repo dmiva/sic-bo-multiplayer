@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.{Directives, Route}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import com.dmiva.sicbo.actors.repository.PlayerRepository.RegistrationResult.PlayerAlreadyExists
+import com.dmiva.sicbo.RegistrationResult.PlayerAlreadyExists
 import com.dmiva.sicbo.actors.User
 import com.dmiva.sicbo.common.IncomingMessage.Register
 import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
@@ -24,6 +24,16 @@ import io.circe.syntax.EncoderOps
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
+
+sealed trait RegistrationResult
+object RegistrationResult {
+  case object Successful extends RegistrationResult
+  case object UsernameIsBlank extends RegistrationResult
+  case object PasswordTooShort extends RegistrationResult
+  case object PlayerAlreadyExists extends RegistrationResult
+
+  implicit def convertToString(msg: RegistrationResult): String = msg.toString
+}
 
 class HttpRoutes(lobby: ActorRef, playerService: PlayerService)(implicit val system: ActorSystem, val executionContext: ExecutionContext) extends Directives {
 

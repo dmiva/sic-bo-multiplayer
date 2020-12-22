@@ -1,8 +1,7 @@
 package com.dmiva.sicbo.actors
 
-import akka.actor.SupervisorStrategy.{Escalate, Restart}
-import akka.actor.{Actor, ActorKilledException, OneForOneStrategy, Props}
-import com.dmiva.sicbo.actors.repository.PlayerRepository
+import akka.actor.SupervisorStrategy.Restart
+import akka.actor.{Actor, OneForOneStrategy, Props}
 import com.dmiva.sicbo.service.PlayerService
 
 import scala.concurrent.duration.DurationInt
@@ -14,24 +13,20 @@ object Lobby {
 // a.k.a API Gateway
 class Lobby(service: PlayerService) extends Actor {
   private val gameRoom = context.actorOf(GameRoom.props(), "game")
-  private val playerRepository = context.actorOf(PlayerRepository.props(service), "repository")
+  private val userService = context.actorOf(UserService.props(service), "repository")
 
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 4.seconds) {
-      case _: ActorKilledException     => Restart
       case _: Exception                => Restart
     }
 
   override def receive: Receive = {
-    case msg: PlayerRepository.Command.Register       => playerRepository forward msg
-    case msg: PlayerRepository.Command.Login          => playerRepository forward msg
-    case msg: PlayerRepository.Command.Login2          => playerRepository forward msg
-    case msg: PlayerRepository.Command.UpdateBalance  => playerRepository forward msg
-    case msg: PlayerRepository.Command.UpdateBalance2  => playerRepository forward msg
+    case msg: UserService.Command.Login          => userService forward msg
+    case msg: UserService.Command.UpdateBalance  => userService forward msg
 
-    case msg: GameRoom.Command.PlaceBet               => gameRoom forward msg
-    case msg: GameRoom.Command.Join                   => gameRoom forward msg
-    case msg: GameRoom.Command.Leave                  => gameRoom forward msg
+    case msg: GameRoom.Command.PlaceBet          => gameRoom forward msg
+    case msg: GameRoom.Command.Join              => gameRoom forward msg
+    case msg: GameRoom.Command.Leave             => gameRoom forward msg
   }
 }
 

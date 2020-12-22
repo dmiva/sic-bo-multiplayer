@@ -70,7 +70,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
     newGameState match {
       case Right(state) => newGameState shouldEqual Right(state)
-      case Left(_) => 0 // TODO: Ugly
+      case Left(_) => fail()
     }
 
   }

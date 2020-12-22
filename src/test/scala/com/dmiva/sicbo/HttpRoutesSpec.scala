@@ -6,7 +6,7 @@ import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import com.dmiva.sicbo.actors.Lobby
 import com.dmiva.sicbo.common.IncomingMessage.Register
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs.incomingMessageOps
-import com.dmiva.sicbo.domain.{Balance, Bet, BetType, GamePhase, Name, PlayerInfo, UserType}
+import com.dmiva.sicbo.domain.{Balance, Bet, BetType, GamePhase, PlayerInfo, UserType}
 import com.dmiva.sicbo.repository.PlayerRepository
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -59,8 +59,8 @@ class HttpRoutesSpec extends AnyFunSuite with Matchers with MockitoSugar with Sc
         val futurePlayer = service.getPlayerByName(testName1).value
         futurePlayer onComplete {
           case Success(value) => value match {
-            case Left(value) => fail
-            case Right(player) => fail
+            case Left(value) => fail()
+            case Right(player) => fail()
               println(s"Received player $player")
               wsClient.sendMessage(Requests.Login(testName1, testPass1))
               wsClient.expectMessage(Responses.LoginSuccessful(PlayerInfo.from(player)))
@@ -68,7 +68,7 @@ class HttpRoutesSpec extends AnyFunSuite with Matchers with MockitoSugar with Sc
               wsClient.sendCompletion()
               wsClient.expectCompletion()
           }
-          case Failure(exception) => fail
+          case Failure(exception) => fail()
         }
       }
   }
