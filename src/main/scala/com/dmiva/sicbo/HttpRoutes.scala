@@ -14,7 +14,6 @@ import com.dmiva.sicbo.common.{IncomingMessage, OutgoingMessage}
 import com.dmiva.sicbo.common.OutgoingMessage.Error
 import com.dmiva.sicbo.common.codecs.IncomingMessageCodecs._
 import com.dmiva.sicbo.common.codecs.OutgoingMessageCodecs._
-import com.dmiva.sicbo.common.JsonConfig.customConfig
 import com.dmiva.sicbo.service.{PlayerAlreadyExistsError, PlayerService}
 import io.circe.jawn.decode
 import io.circe.generic.auto._

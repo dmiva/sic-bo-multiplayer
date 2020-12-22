@@ -37,29 +37,27 @@ class UserService(service: PlayerService) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     // Login through database
-    case Login(name, pw) => {
+    case Login(name, pw) =>
       val replyTo = sender()
       val futureResult = service.loginPlayer(IncomingMessage.Login(name, pw))
         .map(result => LoginRequestResult(result, pw, replyTo))
       futureResult pipeTo self
-    }
 
-    case LoginRequestResult(player, pw, replyTo) => {
+    case LoginRequestResult(player, pw, replyTo) =>
       val loginResult = player match {
         case Some(player) if player.password == pw  => LoginResult.Successful(player)
         case Some(_)                                => LoginResult.PasswordIncorrect
         case None                                   => LoginResult.UserDoesNotExist
       }
       replyTo ! loginResult
-    }
 
     // Update balance through database
-    case UpdateBalance(name, balance) => {
+    case UpdateBalance(name, balance) =>
       val replyTo = sender()
       val futureResult = service.updateBalance(name, balance)
         .map(result => UpdateBalanceResult(result, replyTo))
       futureResult pipeTo self
-    }
+
     case UpdateBalanceResult(_, _) => // do nothing
 
   }

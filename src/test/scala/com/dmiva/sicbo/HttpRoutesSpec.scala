@@ -59,7 +59,7 @@ class HttpRoutesSpec extends AnyFunSuite with Matchers with MockitoSugar with Sc
         val futurePlayer = service.getPlayerByName(testName1).value
         futurePlayer onComplete {
           case Success(value) => value match {
-            case Left(value) => fail()
+            case Left(_) => fail()
             case Right(player) => fail()
               println(s"Received player $player")
               wsClient.sendMessage(Requests.Login(testName1, testPass1))
@@ -68,7 +68,7 @@ class HttpRoutesSpec extends AnyFunSuite with Matchers with MockitoSugar with Sc
               wsClient.sendCompletion()
               wsClient.expectCompletion()
           }
-          case Failure(exception) => fail()
+          case Failure(_) => fail()
         }
       }
   }

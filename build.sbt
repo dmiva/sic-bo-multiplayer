@@ -9,7 +9,8 @@ scalacOptions ++= Seq(
   "-feature",
   "-Ymacro-annotations",
   "-Xlint:unused",
-  "-Wunused:implicits"
+"-Wunused:implicits",
+  "-language:implicitConversions"
 )
 
 val akkaVersion = "2.6.10"

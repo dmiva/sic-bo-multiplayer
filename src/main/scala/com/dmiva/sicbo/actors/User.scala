@@ -21,7 +21,7 @@ object User {
   final case class Connected(wsHandle: ActorRef)
   case object Disconnected
 
-  def props(lobby: ActorRef) = Props(new User(lobby))
+  def props(lobby: ActorRef): Props = Props(new User(lobby))
 }
 
 class User(lobby: ActorRef) extends Actor with ActorLogging {

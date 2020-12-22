@@ -7,7 +7,7 @@ import com.dmiva.sicbo.service.PlayerService
 import scala.concurrent.duration.DurationInt
 
 object Lobby {
-  def props(service: PlayerService) = Props(new Lobby(service: PlayerService))
+  def props(service: PlayerService): Props = Props(new Lobby(service: PlayerService))
 }
 
 class Lobby(service: PlayerService) extends Actor {

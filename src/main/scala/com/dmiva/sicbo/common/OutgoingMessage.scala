@@ -28,7 +28,7 @@ object OutgoingMessage {
         s"Dice outcome: ${diceOutcome.a} ${diceOutcome.b} ${diceOutcome.c} " +
         s"TOTAL ${diceOutcome.a + diceOutcome.b + diceOutcome.c}. " +
         s"Winning bets: $winningBetTypes. " +
-        s"$username bet amount $totalBet, won $totalWin. New balance: ${balance.amount}"
+        s"$username bet amount $totalBet, won $totalWin. New balance: ${balance.amount}\r\n"
     }
   }
 

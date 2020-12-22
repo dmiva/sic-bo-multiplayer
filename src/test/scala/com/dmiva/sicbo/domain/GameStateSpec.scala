@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 
 class GameStateSpec extends AnyFunSuite with Matchers {
   
-  val userType = UserType.User
+  val userType: UserType = UserType.User
 
   test("Should be able to place bet") {
 
@@ -25,12 +25,12 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
     val placedBetsAmount = gameState match {
       case Right(state) => state.numberOfBetsPlaced(player.username)
-      case Left(e) => 0
+      case Left(_) => 0
     }
 
     val balanceAfterPlacedBets = gameState match {
       case Right(state) => state.getPlayerBalance(player.username)
-      case Left(e) => initialBalance
+      case Left(_) => initialBalance
     }
 
     placedBetsAmount shouldEqual bets.length
@@ -59,12 +59,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("Should be able to apply dice outcome") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.RollingDice)
-    val player = Player(0, "name", "pass", userType, Balance(100))
 
-    val bets = List(
-      Bet(Some(20), BetType.Total(5), None),
-      Bet(Some(50), BetType.Total(18), None)
-    )
     val dice = DiceOutcome(1,3,5)
     val newGameState = game.applyDiceOutcome(dice)
 
@@ -77,12 +72,7 @@ class GameStateSpec extends AnyFunSuite with Matchers {
 
   test("Should not be able to apply dice outcome in incorrect game phase") {
     val game: GameState = GameState.initGame.setGamePhase(GamePhase.PlacingBets)
-    val player = Player(0, "name", "pass", userType, Balance(100))
 
-    val bets = List(
-      Bet(Some(20), BetType.Total(5), None),
-      Bet(Some(50), BetType.Total(18), None)
-    )
     val dice = DiceOutcome(1,3,5)
     val newGameState = game.applyDiceOutcome(dice)
 

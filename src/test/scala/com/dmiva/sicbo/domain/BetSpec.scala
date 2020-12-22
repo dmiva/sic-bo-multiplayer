@@ -175,7 +175,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
   test("winningBets bet should work correctly with randomized input") {
     forAll(
       choose(5, 10)
-    ) { case numOfBets =>
+    ) { numOfBets =>
       for (_ <- 0 to numOfBets) {
         var list: collection.mutable.Seq[Bet] = collection.mutable.Seq[Bet]()
         forAll(
@@ -204,7 +204,7 @@ class BetSpec extends AnyFunSuite with Matchers with ScalaCheckDrivenPropertyChe
             dice.hasDouble(num2),
             dice.hasTriple(num1),
             dice.hasTriple(num2),
-            dice.hasAnyTriple,
+            dice.hasAnyTriple
           ).count(_ == true)
 
           list = list :+ Bet(None, BetType.Big, None)

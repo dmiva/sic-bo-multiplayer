@@ -29,11 +29,11 @@ final case class Paytable(dice: DiceOutcome) {
   private val anyTriplePayout: Int = 30
   private val doublePayout: Int = 8
   private val comboPayout: Int = 5
-  private val payoutIfTripple: Int = if (dice.hasAnyTriple) 0 else 1
-  private val bigPayout: Int = payoutIfTripple
-  private val smallPayouyt: Int = payoutIfTripple
-  private val evenPayout: Int = payoutIfTripple
-  private val oddPayout: Int = payoutIfTripple
+  private val payoutIfTriple: Int = if (dice.hasAnyTriple) 0 else 1
+  private val bigPayout: Int = payoutIfTriple
+  private val smallPayouyt: Int = payoutIfTriple
+  private val evenPayout: Int = payoutIfTriple
+  private val oddPayout: Int = payoutIfTriple
 
   private def getNumberPayout(num: Int): Int      = if (dice.hasNumber(num)) numberPayout(num) else 0
   private def getComboPayout(a: Int, b: Int): Int = if (dice.hasCombo(a, b)) comboPayout else 0

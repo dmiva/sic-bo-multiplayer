@@ -19,7 +19,7 @@ object DiceRoller {
 
   private final case class Result(response: HttpResponse, replyTo: ActorRef)
 
-  def props() = Props(new DiceRoller)
+  def props(): Props = Props(new DiceRoller)
 
   /** URL used to obtain True RNG values for dice */
   private val httpUrl = "https://www.random.org/integers/?num=3&min=1&max=6&col=1&base=10&format=plain&rnd=new"
@@ -46,7 +46,7 @@ class DiceRoller extends Actor with ActorLogging {
   private[actors] def getTrueRandomNumber(uri: Uri): Future[HttpResponse] = { // TODO: Manage UnknownHostException
 //    log.info("Obtaining true random values for dice...")
     http.singleRequest(HttpRequest(uri = uri)) recover {
-      case NonFatal(t) => HttpResponse(StatusCodes.ServiceUnavailable)
+      case NonFatal(_) => HttpResponse(StatusCodes.ServiceUnavailable)
     }
   }
 

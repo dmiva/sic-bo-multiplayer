@@ -43,7 +43,7 @@ class PlayerRepository(db: Database)(implicit ec: ExecutionContext)
   override def updateByName(name: Name, balance: Balance): Future[Int] =
     db.run(
       players.filter(_.username === name)
-        .map(p => (p.balance))
+        .map(p => p.balance)
         .update(balance)
     )
 

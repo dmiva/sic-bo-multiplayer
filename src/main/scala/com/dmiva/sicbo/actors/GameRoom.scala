@@ -40,7 +40,7 @@ object GameRoom {
       new TimerSetting(nextPhase, duration){}
   }
 
-  def props() = Props(new GameRoom())
+  def props(): Props = Props(new GameRoom())
 }
 
 class GameRoom extends Timers with PersistentActor with ActorLogging {
@@ -96,7 +96,7 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
 
   def handleCommand(users: Map[ActorRef, Player]): Receive = {
     case SaveSnapshotSuccess(metadata) =>
-//      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
+      log.info(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} saved successfully.")
 
     case SaveSnapshotFailure(metadata, reason) =>
       log.error(s"Snapshot for ${metadata.persistenceId} seqId=${metadata.sequenceNr} failure. Reason: ${reason.getMessage}")
@@ -167,7 +167,7 @@ class GameRoom extends Timers with PersistentActor with ActorLogging {
             state.gameResult.foreachEntry {
               case (playerName, result) =>
                 users.find { case (_, player) => player.username == playerName } match {
-                  case Some((ref, player)) => ref ! result
+                  case Some((ref, _)) => ref ! result
                   case None =>
                 }
             }
