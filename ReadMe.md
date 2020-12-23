@@ -1,5 +1,5 @@
 # Sic Bo Multiplayer
-This is a course project in an [Evolution Scala bootcamp](https://github.com/evolution-gaming/scala-bootcamp). It doesn't have UI, only backend part is implemented. Communication with backend is possible using websocket clients such as `websocat` or special Chrome extensions.
+This is a course project in an [Evolution Scala bootcamp](https://github.com/evolution-gaming/scala-bootcamp). It doesn't have UI, only backend part is implemented. Communication with backend is possible using websocket clients such as `websocat` or special Chrome extensions like [WebSocket King client](https://chrome.google.com/webstore/detail/websocket-king-client/cbcbkhdmedgianpaifchdaddpnmgnknn?hl=en).
 
 ## Technical stack
 * Akka 
@@ -8,27 +8,30 @@ This is a course project in an [Evolution Scala bootcamp](https://github.com/evo
 * Circe 
 * Slick 
 
-### Requirements
+### Prerequisites
 * PostgreSQL
   
 Before starting the project, please manually create a database with name `sicbo`.
 
-### Build
-To build, use `sbt run`
-
 Database settings can be modified in [application.conf](src/main/resources/application.conf), by default database is run on `localhost` at port `5432` with user `postgres` and password `password`
 
 
+### Build
+To build, use `sbt run`
+
 ### Implemented things
+* Every client is an actor.
 * Game state is persisted using Persistent Actor and game will recover from same game phase after restart of JVM.
 * Player's balance is updating in database after each game, and after player quits the game.
 * Betting is possible in game phase `placing_bets` and if player has balance above 0.
+* Payout table as in game Super Sic Bo.
 
 ## How to interact
 ### HTTP part
-By default, application is run on `127.0.0.1:9000`. You can also alter this in 
+By default, application is run on `127.0.0.1:9000`. You can change this in [application.conf](src/main/resources/application.conf).
+
 At the beginning, there are no registered users, so you need to create one. 
-For this, send an HTTP POST request with header `Content-Type: application/json` to endpoint `localhost:9000/register` with body:
+For this, send an HTTP POST request with header `Content-Type: application/json` to endpoint `http://127.0.0.1:9000/register` with body:
 ```json
 {
   "$type" : "register",
@@ -223,4 +226,4 @@ and the game result itself. Example of such output:
 ```
 
 ### Few notes
-Currently there are few failing tests that do not affect the logic of backend server. These tests are just a bit incorrectly written or do not reflect the latest changes that I made during the last day.
+Currently, there are few failing tests that do not affect the logic of backend server. These tests are just a bit incorrectly written or do not reflect the latest changes that I made during the last day.
