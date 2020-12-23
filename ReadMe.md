@@ -1,4 +1,5 @@
 # Evolution Scala Bootcamp course project
+more details will be added on 23.12
 
 ##Sic Bo multiplayer
 
