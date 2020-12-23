@@ -1,32 +1,37 @@
 # Sic Bo Multiplayer
-This is a course project in an [Evolution Scala bootcamp](https://github.com/evolution-gaming/scala-bootcamp). It has no UI, only backend  part is implemented. Communication with backend is possible using websocket clients such as websocat or any other client like Chrome extension WebSocket King client.
+This is a course project in an [Evolution Scala bootcamp](https://github.com/evolution-gaming/scala-bootcamp). It doesn't have UI, only backend part is implemented. Communication with backend is possible using websocket clients such as `websocat` or special Chrome extensions.
 
-## Tech stack
-* Akka
-* Akka HTTP (HTTP & WebSockets)
-* Akka Persistence  
-* Circe
-* Slick
-
+## Technical stack
+* Akka 
+* Akka HTTP (HTTP & WebSockets) 
+* Akka Persistence 
+* Circe 
+* Slick 
 
 ### Requirements
-* PostgreSQL 
+* PostgreSQL
   
-Upon starting, please manually create a database with name `sicbo`.
-Database settings can be modified in [application.conf](src/main/resources/application.conf), by default database is run on `localhost` at port `5432` with user `postgres` and password `password`
-
+Before starting the project, please manually create a database with name `sicbo`.
 
 ### Build
 To build, use `sbt run`
 
+Database settings can be modified in [application.conf](src/main/resources/application.conf), by default database is run on `localhost` at port `5432` with user `postgres` and password `password`
+
+
+### Implemented things
+* Game state is persisted using Persistent Actor and game will recover from same game phase after restart of JVM.
+* Player's balance is updating in database after each game, and after player quits the game.
+* Betting is possible in game phase `placing_bets` and if player has balance above 0.
+
 ## How to interact
 ### HTTP part
-By default, application is run on `localhost:9000`. You can also alter this in 
+By default, application is run on `127.0.0.1:9000`. You can also alter this in 
 At the beginning, there are no registered users, so you need to create one. 
-For this, send an HTTP POST request to endpoint `localhost:9000/register` with body:
-
+For this, send an HTTP POST request with header `Content-Type: application/json` to endpoint `localhost:9000/register` with body:
 ```json
 {
+  "$type" : "register",
   "username" : "MyName",
   "password" : "MyPassword"
 }
@@ -37,8 +42,7 @@ curl -X POST -H "Content-Type: application/json" -d '{"&type":"register", "usern
 ```
 ### WebSocket part
 After a player is registered, you can switch to WebSocket client and interact with backend.
-Connect to endpoind `ws://127.0.0.1:9000/game`.
-To connect with websocat, use `websocat ws://127.0.0.1:9000/game`
+Connect to endpoind `ws://127.0.0.1:9000/game`. I recommend using Chrome extension for WebSocket part.
 
 Available commands to player:
 * Login
@@ -58,7 +62,10 @@ After login, game will start, and player is able to send commands
 }
 ```
 * Place Bet
-Bet consists of `amount`, and `bet_type`
+
+Placing bet is allowed only during the game phase `placing_bets`
+
+Bet consists of two fields: `amount`, and `bet_type`
 
 Example with bet `Any triple`
 ```json
@@ -94,7 +101,8 @@ Example with bet `Combo(3,6)`
 
 List of available bet types:
 * Number 
-  Where `num` field is from 1 to 6
+  
+Where `num` field is from 1 to 6
 ```json
 {
   "$type": "number",
@@ -102,6 +110,7 @@ List of available bet types:
 }
 ```
 * Combo
+
 Where `a` and `b` are not equal, from 1 to 6, and `b` greater than `a`
 ```json
 {
@@ -111,7 +120,8 @@ Where `a` and `b` are not equal, from 1 to 6, and `b` greater than `a`
 }
 ```
 * Total 
-  Where `num` is from 4 to 17
+  
+Where `num` is from 4 to 17
   
 ```json
 {
@@ -120,7 +130,8 @@ Where `a` and `b` are not equal, from 1 to 6, and `b` greater than `a`
 }
 ```
 * Double
-  Where `num` is from 1 to 6
+  
+Where `num` is from 1 to 6
 
 ```json
 {
@@ -129,7 +140,8 @@ Where `a` and `b` are not equal, from 1 to 6, and `b` greater than `a`
 }
 ```
 * Triple
-  Where `num` is from 1 to 6
+  
+Where `num` is from 1 to 6
 
 ```json
 {
@@ -137,10 +149,78 @@ Where `a` and `b` are not equal, from 1 to 6, and `b` greater than `a`
   "num": 4,
 }
 ```
-* Other bets - `even`, `odd`, `small`, `big`, `any_triple`
+* Other 
+  
+`even`, `odd`, `small`, `big`, `any_triple`
 ```json
 {
   "$type": "even"
 }
 ```
 
+Throughout the game, you will be receiving messages from server about the change of game phase
+```json
+{
+  "new_phase": "rolling_dice",
+  "$type": "game_phase_changed"
+}
+```
+and the game result itself. Example of such output:
+```json
+{
+  "dice_outcome": {
+    "a": 4,
+    "b": 3,
+    "c": 1
+  },
+  "winning_bet_types": [
+    {
+      "$type": "small"
+    },
+    {
+      "$type": "even"
+    },
+    {
+      "num": 1,
+      "$type": "number"
+    },
+    {
+      "num": 3,
+      "$type": "number"
+    },
+    {
+      "num": 4,
+      "$type": "number"
+    },
+    {
+      "num": 8,
+      "$type": "total"
+    },
+    {
+      "a": 1,
+      "b": 3,
+      "$type": "combo"
+    },
+    {
+      "a": 1,
+      "b": 4,
+      "$type": "combo"
+    },
+    {
+      "a": 3,
+      "b": 4,
+      "$type": "combo"
+    }
+  ],
+  "total_bet": 0,
+  "total_win": 0,
+  "balance": {
+    "amount": 0
+  },
+  "username": "MyUsername",
+  "$type": "game_result"
+}
+```
+
+### Few notes
+Currently there are few failing tests that do not affect the logic of backend server. These tests are just a bit incorrectly written or do not reflect the latest changes that I made during the last day.
