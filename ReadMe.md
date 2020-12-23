@@ -1,6 +1,8 @@
 # Sic Bo Multiplayer
 This is a course project in an [Evolution Scala bootcamp](https://github.com/evolution-gaming/scala-bootcamp). It doesn't have UI, only backend part is implemented. Communication with backend is possible using websocket clients such as `websocat` or special Chrome extensions like [WebSocket King client](https://chrome.google.com/webstore/detail/websocket-king-client/cbcbkhdmedgianpaifchdaddpnmgnknn?hl=en).
 
+For the game rules, check [Wikipedia](https://en.wikipedia.org/wiki/Sic_bo).
+
 ## Technical stack
 * Akka 
 * Akka HTTP (HTTP & WebSockets) 
